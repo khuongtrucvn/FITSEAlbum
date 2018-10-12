@@ -48,19 +48,6 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    // return a SHARED intent to deliver an email
-    private Intent emailIntent() {
-
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_EMAIL, new String[] { "v.matos@csuohio.edu" });
-        intent.putExtra(Intent.EXTRA_SUBJECT, "subject here...");
-        intent.putExtra(Intent.EXTRA_TEXT, "this is the email-text to be sent...");
-
-        return intent;
-
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
     // user clicked a menu-item from ActionBar
@@ -69,11 +56,6 @@ public class MainActivity extends AppCompatActivity {
             // perform SEARCH operations...
             return true;
         }
-        else if (id == R.id.action_share) {
-            startActivity( Intent.createChooser( emailIntent(), "Send EMAIL Using...") );
-            return true;
-        }
-
         else if (id == R.id.action_about) {
             // perform ABOUT operations...
             return true;
@@ -82,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
             // perform SETTING operations...
             return true;
         }
+
         return false;
     }
 }
