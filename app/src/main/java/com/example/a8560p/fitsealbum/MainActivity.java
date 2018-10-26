@@ -1,70 +1,121 @@
 package com.example.a8560p.fitsealbum;
 
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.GridView;
 
-public class MainActivity extends AppCompatActivity {
-    ActionBar actionBar;
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
+
+    private DrawerLayout drawer;
+    private ActionBarDrawerToggle toggle;
+
+    private Toolbar toolBar;
+
+    FragmentTransaction ft;
+    PicturesActivity pictures;
+    AlbumActivity album;
+    FavoriteActivity favorite;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // setup ActionBar
-        actionBar = getSupportActionBar();
+        toolBar = (Toolbar) findViewById(R.id.nav_actionBar);
+        setSupportActionBar(toolBar);
 
-        actionBar.setTitle("  FIT SE Album");
-        actionBar.setSubtitle("  Version 1.0");
-        actionBar.setIcon(R.drawable.ic_action_logo);
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        toggle = new ActionBarDrawerToggle(this,drawer,R.string.open,R.string.close);
 
-        actionBar.setDisplayShowCustomEnabled(true);            // allow custom views to be shown
-        actionBar.setDisplayShowHomeEnabled(true);              // allow app icon – logo to be shown
-        actionBar.setHomeButtonEnabled(true);                   // needed for API14 or greater
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
 
-        GridView gridView = (GridView) findViewById(R.id.gridView);
-        gridView.setAdapter(new ImageAdapter(this));
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent i = new Intent(getApplicationContext(), FullImageActivity.class);
-                i.putExtra("id", position);
-                startActivity(i);
-            }
-        });
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        ft = getFragmentManager().beginTransaction();
+        pictures = PicturesActivity.newInstance();
+        ft.replace(R.id.content_frame, pictures);
+        ft.commit();
+
+        toolBar.setTitle("Images");
+
     }
 
-    @Override  public boolean onCreateOptionsMenu(Menu menu) {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; add items to the action bar
-        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.status_bar, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-    // user clicked a menu-item from ActionBar
+        // user clicked a menu-item from ActionBar
+        if(toggle.onOptionsItemSelected(item)){
+            return true;
+        }
         int id = item.getItemId();
         if (id == R.id.action_search) {
             // perform SEARCH operations...
             return true;
         }
-        else if (id == R.id.action_about) {
-            // perform ABOUT operations...
-            return true;
+        return false;
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_pictures) {
+            toolBar.setTitle("Images");
+
+            ft = getFragmentManager().beginTransaction();
+            pictures = PicturesActivity.newInstance();
+            ft.replace(R.id.content_frame, pictures);
+            ft.commit();
         }
-        else if (id == R.id.action_settings) {
-            // perform SETTING operations...
-            return true;
+        else if (id == R.id.nav_album) {
+            toolBar.setTitle("Album");
+
+            ft = getFragmentManager().beginTransaction();
+            album = AlbumActivity.newInstance();
+            ft.replace(R.id.content_frame, album);
+            ft.commit();
+        }
+        else if (id == R.id.nav_favorite) {
+            toolBar.setTitle("Favorite");
+
+            ft = getFragmentManager().beginTransaction();
+            favorite = FavoriteActivity.newInstance();
+            ft.replace(R.id.content_frame, favorite);
+            ft.commit();
+        }
+        else if (id == R.id.nav_settings) {
+            startActivity(new Intent(MainActivity.this,SettingsActivity.class));
+        }
+        else if (id == R.id.nav_feedback) {
+
+        }
+        else if (id == R.id.nav_help) {
+            startActivity(new Intent(MainActivity.this,FullImageActivity.class));
         }
 
-        return false;
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
     }
 }

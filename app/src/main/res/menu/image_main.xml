@@ -6,17 +6,18 @@
     tools:context="csu.matos.FullImageActivity" >
 
     <item
-        android:id="@+id/action_share"
-        android:icon="@drawable/round_share_white_18dp"
+        android:id="@+id/action_favorite"
+        android:icon="@drawable/round_favorite_24"
         android:orderInCategory="140"
         app:showAsAction="always"
-        android:title="Share"/>
+        android:title="Favortite"/>
 
     <item
         android:id="@+id/action_slideshow"
         android:orderInCategory="180"
         app:showAsAction="never"
         android:title="Slideshow"/>
+
     <item
         android:id="@+id/action_setBackground"
         android:orderInCategory="200"
