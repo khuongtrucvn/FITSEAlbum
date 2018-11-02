@@ -1,5 +1,6 @@
 package com.example.a8560p.fitsealbum;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -7,16 +8,22 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import java.io.OutputStreamWriter;
-
 public class SetPasswordActivity extends AppCompatActivity{
-    private final static String FILE_PASSWORD = "password.txt";
+    MyPrefs myPrefs;
     Button btnConfirm, btnCancel;
     TextInputLayout txtPassword, txtRetypePassword;
     String password, retypePassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        myPrefs = new MyPrefs(this);
+
+        if(myPrefs.loadNightModeState() == true){
+            setTheme(R.style.NightNoActionBarTheme);
+        }
+        else{
+            setTheme(R.style.DayNoActionBarTheme);
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_password);
 
@@ -28,6 +35,8 @@ public class SetPasswordActivity extends AppCompatActivity{
             @Override
             public void onClick(View v) {
                 if(confirmPassword()){
+                    startActivity(new Intent(SetPasswordActivity.this,MainActivity.class));
+                    startActivity(new Intent(SetPasswordActivity.this,SettingsActivity.class));
                     finish();
                 }
             }
@@ -74,21 +83,12 @@ public class SetPasswordActivity extends AppCompatActivity{
 
     boolean confirmPassword(){
         if(validatePassword()){
-            //Truy cập và lưu password vào file password.txt
-            try {
-                OutputStreamWriter out = new OutputStreamWriter(
-                        openFileOutput(FILE_PASSWORD, 0));
-                out.write(password);
-                out.close();
-            } catch (Throwable t) {
-                Toast.makeText(this, t.getMessage(), Toast.LENGTH_LONG).show();
-            }
+            //Truy cập và lưu password vào file data
+            myPrefs.setPassword(password);
 
             Toast.makeText(this, "Password has been set", Toast.LENGTH_SHORT).show();
             return true;
         }
-        else{
-            return false;
-        }
+        return false;
     }
 }

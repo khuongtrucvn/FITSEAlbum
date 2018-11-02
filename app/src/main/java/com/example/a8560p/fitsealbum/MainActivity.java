@@ -1,6 +1,5 @@
 package com.example.a8560p.fitsealbum;
 
-import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,8 +16,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private DrawerLayout drawer;
     private ActionBarDrawerToggle toggle;
-
     private Toolbar toolBar;
+    private MyPrefs myPrefs;
 
     FragmentTransaction ft;
     PicturesActivity pictures;
@@ -27,6 +26,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        myPrefs = new MyPrefs(this);
+
+        if(myPrefs.loadNightModeState() == true){
+            setTheme(R.style.NightNoActionBarTheme);
+        }
+        else{
+            setTheme(R.style.DayNoActionBarTheme);
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -106,6 +113,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         else if (id == R.id.nav_settings) {
             startActivity(new Intent(MainActivity.this,SettingsActivity.class));
+            finish();
         }
         else if (id == R.id.nav_feedback) {
 

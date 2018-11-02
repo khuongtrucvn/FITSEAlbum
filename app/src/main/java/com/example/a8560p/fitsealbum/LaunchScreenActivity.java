@@ -4,18 +4,15 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.Toast;
-
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 public class LaunchScreenActivity extends AppCompatActivity{
-    private final static String FILE_PASSWORD = "password.txt";
-    String password="";
+    MyPrefs myPrefs;
+    String password;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        myPrefs = new MyPrefs(this);
+        password = myPrefs.getPassword();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.launch_screen);
         new BackgroundTask().execute();
@@ -23,8 +20,6 @@ public class LaunchScreenActivity extends AppCompatActivity{
 
     public void onStart(){
         super.onStart();
-
-
     }
 
     private class BackgroundTask extends AsyncTask {
@@ -38,15 +33,6 @@ public class LaunchScreenActivity extends AppCompatActivity{
 
             /*  Use this method to load background
              * data that your app needs. */
-            try {
-                InputStream inputStream = openFileInput(FILE_PASSWORD);
-                if (inputStream != null) {
-                    BufferedReader reader = new BufferedReader(new
-                            InputStreamReader(inputStream));
-                    password = reader.readLine();
-                    inputStream.close();
-                }
-            } catch (Exception ex) {}
 
             try {
                 Thread.sleep(3000);
@@ -67,7 +53,8 @@ public class LaunchScreenActivity extends AppCompatActivity{
                 startActivity(new Intent(LaunchScreenActivity.this,MainActivity.class));
             }
             else{
-                startActivity(new Intent(LaunchScreenActivity.this,LoginActivity.class));
+                myPrefs.setPassMode(0);
+                startActivity(new Intent(LaunchScreenActivity.this,PasswordActivity.class));
             }
 
             finish();
