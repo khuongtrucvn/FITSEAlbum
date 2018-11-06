@@ -4,14 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/backgroundColor">
-    <TextView
-        android:layout_height="match_parent"
+
+    <GridView
+        android:id="@+id/galleryGridView"
         android:layout_width="match_parent"
-        android:layout_marginTop="10dp"
-        android:layout_gravity="center"
-        android:text="Pictures"
-        android:textAlignment="center"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="?attr/textColor"/>
+        android:layout_height="wrap_content"
+        android:columnWidth="280dp"
+        android:gravity="center"
+        android:horizontalSpacing="2dp"
+        android:numColumns="4"
+        android:padding="2dp"
+        android:stretchMode="columnWidth"
+        android:verticalSpacing="2dp" >
+    </GridView>
 </LinearLayout>
