@@ -2,16 +2,20 @@ package com.example.a8560p.fitsealbum;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 public class FullImageActivity extends AppCompatActivity {
 
     ActionBar actionBar;
     ImageView imageView;
+    BottomNavigationView mainNav;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,8 +28,35 @@ public class FullImageActivity extends AppCompatActivity {
         actionBar.setDisplayShowCustomEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        Intent i = getIntent();
         imageView = (ImageView) findViewById(R.id.imageView);
+
+        //Navigation bottom onClickListener
+        mainNav=(BottomNavigationView)findViewById(R.id.nav_bottom);
+        mainNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                int id = menuItem.getItemId();
+
+                if (id == R.id.nav_edit) {
+                    Toast.makeText(getApplicationContext(),"Edit Image",Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+                if (id == R.id.nav_crop) {
+                    Toast.makeText(getApplicationContext(),"Crop Image",Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+                if (id == R.id.nav_share) {
+                    startActivity( Intent.createChooser( emailIntent(), "Send EMAIL Using...") );
+                    return true;
+                }
+                if (id == R.id.nav_delete) {
+                    Toast.makeText(getApplicationContext(),"Delete",Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+
+                return false;
+            }
+        });
     }
 
     @Override  public boolean onCreateOptionsMenu(Menu menu) {
@@ -52,8 +83,8 @@ public class FullImageActivity extends AppCompatActivity {
         // user clicked a menu-item from ActionBar
         int id = item.getItemId();
 
-        if (id == R.id.nav_share) {
-            startActivity( Intent.createChooser( emailIntent(), "Send EMAIL Using...") );
+        if (id == R.id.action_favorite) {
+            // perform FAVORITE operations...
             return true;
         }
         else if (id == R.id.action_slideshow) {

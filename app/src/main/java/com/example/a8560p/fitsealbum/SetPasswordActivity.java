@@ -46,6 +46,8 @@ public class SetPasswordActivity extends AppCompatActivity{
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                startActivity(new Intent(SetPasswordActivity.this,MainActivity.class));
+                startActivity(new Intent(SetPasswordActivity.this,SettingsActivity.class));
                 finish();
             }
         });
