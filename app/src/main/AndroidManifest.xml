@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
 
     <application
         android:allowBackup="true"
@@ -14,7 +16,8 @@
         android:theme="@style/DayAppTheme">
         <activity
             android:name=".LaunchScreenActivity"
-            android:theme="@style/DayNoActionBarTheme">
+            android:theme="@style/DayNoActionBarTheme"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -22,13 +25,15 @@
             </intent-filter>
         </activity>
         <activity android:name=".PasswordActivity"
-            android:theme="@style/DayNoActionBarTheme"/>
+            android:theme="@style/DayNoActionBarTheme"
+            android:screenOrientation="portrait"/>
         <activity android:name=".MainActivity"
             android:theme="@style/DayNoActionBarTheme"/>
         <activity android:name=".FullImageActivity"/>
         <activity android:name=".SettingsActivity"/>
         <activity android:name=".SetPasswordActivity"
-            android:theme="@style/DayNoActionBarTheme"/>
+            android:theme="@style/DayNoActionBarTheme"
+            android:screenOrientation="portrait"/>
         <activity android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/DayAppTheme"/>
     </application>

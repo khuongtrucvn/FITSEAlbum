@@ -1,6 +1,7 @@
 package com.example.a8560p.fitsealbum;
 
 import android.app.Fragment;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -14,7 +15,9 @@ import java.util.ArrayList;
 
 public class PicturesActivity extends Fragment{
     View pictures;
+    Intent i;
     public static ArrayList<String> images;
+    static int hideToolbar = 0;
 
     public static PicturesActivity newInstance() {
         PicturesActivity fragment = new PicturesActivity();
@@ -32,9 +35,13 @@ public class PicturesActivity extends Fragment{
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
                 if (null != images && !images.isEmpty())
-                    Toast.makeText(
-                            PicturesActivity.super.getActivity(),
-                            "position " + position + " " + images.get(position), Toast.LENGTH_SHORT).show();
+                    /*Toast.makeText(
+                        PicturesActivity.super.getActivity(),
+                        "position " + position + " " + images.get(position), Toast.LENGTH_SHORT).show();*/
+
+                i = new Intent(PicturesActivity.super.getActivity(), FullImageActivity.class);
+                i.putExtra("id", position);
+                startActivity(i);
             }
         });
 

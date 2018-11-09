@@ -8,18 +8,36 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+
+import static android.view.View.VISIBLE;
 
 public class FullImageActivity extends AppCompatActivity {
 
     ActionBar actionBar;
     ImageView imageView;
     BottomNavigationView mainNav;
+    int position;
+    private float x1,x2;
+    static final int MIN_DISTANCE = 150;
+    View decorView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //Màn hình fullscreen
+        decorView = getWindow().getDecorView();
+        requestWindowFeature( Window.FEATURE_NO_TITLE );
+        getWindow().setFlags( WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN );
         setContentView(R.layout.activity_full_image);
 
         // setup ActionBar
@@ -28,10 +46,109 @@ public class FullImageActivity extends AppCompatActivity {
         actionBar.setDisplayShowCustomEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
 
+        mainNav=(BottomNavigationView)findViewById(R.id.nav_bottom);
+
+        if (PicturesActivity.hideToolbar == 0) {
+            actionBar.show();
+            mainNav.setVisibility(View.VISIBLE);
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
+        } else {
+            actionBar.hide();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+            mainNav.setVisibility(View.GONE);
+        }
+
+        Intent i = getIntent();
         imageView = (ImageView) findViewById(R.id.imageView);
 
+        position = i.getExtras().getInt("id");
+        Glide.with(getApplicationContext()).load(PicturesActivity.images.get(position))
+                .apply(new RequestOptions()
+                        .placeholder(R.mipmap.ic_launcher).fitCenter())
+                .into(imageView);
+        imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //                hideToolbar = (hideToolbar + 1) % 2;
+//                if (hideToolbar==0) {
+//                    actionBar.show();
+//                }
+//                else {
+//                    actionBar.hide();
+//                }
+            }
+        });
+
+        imageView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch(event.getAction())
+                {
+                    case MotionEvent.ACTION_DOWN: {
+                        x1 = event.getX();
+                        break;
+                    }
+                    case MotionEvent.ACTION_SCROLL: {
+                        Toast.makeText(getApplicationContext(), "action scroll", Toast.LENGTH_SHORT).show();
+                        break;
+                    }
+                    case MotionEvent.ACTION_UP: {
+                        x2 = event.getX();
+                        float deltaX = x2 - x1;
+                        if (Math.abs(deltaX) > MIN_DISTANCE) {
+                            // Left to Right swipe action
+                            if (x2 > x1) {
+                                if (position>0) {
+                                    //Toast.makeText(getApplicationContext(), "Left to Right swipe [Next]", Toast.LENGTH_SHORT).show();
+                                    finish();
+                                    Intent i = new Intent(getApplicationContext(), FullImageActivity.class);
+                                    i.putExtra("id", position - 1);
+                                    startActivity(i);
+                                }
+                            }
+                            // Right to left swipe action
+                            else {
+                                //Toast.makeText(getApplicationContext(), "Right to Left swipe [Previous]", Toast.LENGTH_SHORT).show();
+                                if (position<PicturesActivity.images.size()-1) {
+                                    finish();
+                                    Intent i = new Intent(getApplicationContext(), FullImageActivity.class);
+                                    i.putExtra("id", position + 1);
+                                    startActivity(i);
+                                }
+                            }
+                        } else {
+                            // consider as something else - a screen tap for example
+                            PicturesActivity.hideToolbar = (PicturesActivity.hideToolbar + 1) % 2;
+                            if (PicturesActivity.hideToolbar == 1) {
+                                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                        | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                                mainNav.setVisibility(View.GONE);
+                            }
+                            else {
+                                decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
+                                mainNav.setVisibility(View.VISIBLE);
+                            }
+                        }
+                        break;
+                    }
+                }
+                if (PicturesActivity.hideToolbar == 0) {
+                    actionBar.show();
+                    decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
+                    mainNav.setVisibility(View.VISIBLE);
+                }
+                else {
+                    actionBar.hide();
+                    decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                    mainNav.setVisibility(View.GONE);
+                }
+                return false;
+            }
+        });
+
         //Navigation bottom onClickListener
-        mainNav=(BottomNavigationView)findViewById(R.id.nav_bottom);
         mainNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
