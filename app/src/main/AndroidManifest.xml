@@ -29,7 +29,8 @@
             android:screenOrientation="portrait"/>
         <activity android:name=".MainActivity"
             android:theme="@style/DayNoActionBarTheme"/>
-        <activity android:name=".FullImageActivity"/>
+        <activity android:name=".FullImageActivity"
+            android:theme="@style/DayNoActionBarTheme"/>
         <activity android:name=".SettingsActivity"/>
         <activity android:name=".SetPasswordActivity"
             android:theme="@style/DayNoActionBarTheme"

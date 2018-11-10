@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ft.commit();
 
         toolBar.setTitle("Images");
-
     }
 
     @Override

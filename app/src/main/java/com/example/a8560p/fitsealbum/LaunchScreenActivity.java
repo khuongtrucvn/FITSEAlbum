@@ -48,7 +48,7 @@ public class LaunchScreenActivity extends AppCompatActivity{
              * data that your app needs. */
 
             try {
-                Thread.sleep(3000);
+                Thread.sleep(1500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

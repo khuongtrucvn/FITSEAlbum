@@ -34,14 +34,13 @@ public class PicturesActivity extends Fragment{
 
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
-                if (null != images && !images.isEmpty())
-                    /*Toast.makeText(
-                        PicturesActivity.super.getActivity(),
-                        "position " + position + " " + images.get(position), Toast.LENGTH_SHORT).show();*/
-
-                i = new Intent(PicturesActivity.super.getActivity(), FullImageActivity.class);
-                i.putExtra("id", position);
-                startActivity(i);
+                if (null != images && !images.isEmpty()){
+                    i = new Intent(PicturesActivity.super.getActivity(), FullImageActivity.class);
+                    i.putExtra("id", position);
+                    i.putExtra("path", images.get(position));
+                    i.putExtra("allPath", images);
+                    startActivity(i);
+                }
             }
         });
 

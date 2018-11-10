@@ -17,14 +17,21 @@
         tools:layout_editor_absoluteY="239dp"
         tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
+    <include layout="@layout/nav_actionbar_image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true" />
+
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/nav_bottom"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"
         app:menu="@menu/nav_bottom"
+        android:background="#66000000"
         app:itemTextColor="#ffffff"
-        app:itemIconTint="#ffffff">
+        app:itemIconTint="#ffffff"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true">
     </android.support.design.widget.BottomNavigationView>
 </RelativeLayout>
