@@ -2,6 +2,7 @@ package com.example.a8560p.fitsealbum;
 
 import android.app.Fragment;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -30,8 +31,17 @@ public class PicturesActivity extends Fragment{
 
         GridView gallery = (GridView) pictures.findViewById(R.id.galleryGridView);
         gallery.setAdapter(new ImageAdapter(PicturesActivity.super.getActivity()));
-        gallery.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
+        int column = gallery.getNumColumns();
+        int screenWidth =  Resources.getSystem().getDisplayMetrics().widthPixels;
+        int screenHeight =  Resources.getSystem().getDisplayMetrics().heightPixels;
+
+        if (screenWidth > screenHeight) {
+            column = 6;
+            gallery.setNumColumns(column);
+        }
+
+        gallery.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
                 if (null != images && !images.isEmpty()){
@@ -43,6 +53,10 @@ public class PicturesActivity extends Fragment{
                 }
             }
         });
+
+        String msg = "Screen res: " + String.valueOf(screenHeight) + " x " + String.valueOf(screenWidth) + "\n";
+        msg += "Number of columns: " + String.valueOf(column);
+        Toast.makeText(this.getActivity(),msg, Toast.LENGTH_SHORT).show();
 
         return pictures;
     }

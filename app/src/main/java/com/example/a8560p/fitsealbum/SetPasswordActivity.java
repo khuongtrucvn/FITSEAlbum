@@ -24,6 +24,7 @@ public class SetPasswordActivity extends AppCompatActivity{
         else{
             setTheme(R.style.DayNoActionBarTheme);
         }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_password);
 

@@ -1,20 +1,18 @@
 package com.example.a8560p.fitsealbum;
 
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.WallpaperManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
-import android.media.ExifInterface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.media.ExifInterface;
 import android.support.v4.content.FileProvider;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -35,10 +33,9 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 
-import static android.view.View.VISIBLE;
-
-public class FullImageActivity extends AppCompatActivity {
-
+public class FullImageActivity extends AppCompatActivity
+{
+    MyPrefs myPrefs;
     Toolbar toolBar;
     ImageView imageView;
     BottomNavigationView mainNav;
@@ -46,9 +43,12 @@ public class FullImageActivity extends AppCompatActivity {
     private float x1,x2;
     static final int MIN_DISTANCE = 150;
     View decorView;
+    AlertDialog dialog;
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        myPrefs = new MyPrefs(this);
         super.onCreate(savedInstanceState);
 
         //Màn hình fullscreen
@@ -64,13 +64,17 @@ public class FullImageActivity extends AppCompatActivity {
         getSupportActionBar().setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+
         mainNav=(BottomNavigationView)findViewById(R.id.nav_bottom);
 
         if (PicturesActivity.hideToolbar == 0) {
             mainNav.setVisibility(View.VISIBLE);
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
+            //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
             getSupportActionBar().show();
-        } else {
+        }
+        else {
             decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                     | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
             mainNav.setVisibility(View.GONE);
@@ -85,30 +89,13 @@ public class FullImageActivity extends AppCompatActivity {
                 .apply(new RequestOptions()
                         .placeholder(R.mipmap.ic_launcher).fitCenter())
                 .into(imageView);
-        imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //                hideToolbar = (hideToolbar + 1) % 2;
-//                if (hideToolbar==0) {
-//                    actionBar.show();
-//                }
-//                else {
-//                    actionBar.hide();
-//                }
-            }
-        });
-
-        imageView.setOnTouchListener(new View.OnTouchListener() {
+imageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch(event.getAction())
                 {
                     case MotionEvent.ACTION_DOWN: {
                         x1 = event.getX();
-                        break;
-                    }
-                    case MotionEvent.ACTION_SCROLL: {
-                        Toast.makeText(getApplicationContext(), "action scroll", Toast.LENGTH_SHORT).show();
                         break;
                     }
                     case MotionEvent.ACTION_UP: {
@@ -118,7 +105,6 @@ public class FullImageActivity extends AppCompatActivity {
                             // Left to Right swipe action
                             if (x2 > x1) {
                                 if (position>0) {
-                                    //Toast.makeText(getApplicationContext(), "Left to Right swipe [Next]", Toast.LENGTH_SHORT).show();
                                     finish();
                                     Intent i = new Intent(getApplicationContext(), FullImageActivity.class);
                                     i.putExtra("id", position - 1);
@@ -129,7 +115,6 @@ public class FullImageActivity extends AppCompatActivity {
                             }
                             // Right to left swipe action
                             else {
-                                //Toast.makeText(getApplicationContext(), "Right to Left swipe [Previous]", Toast.LENGTH_SHORT).show();
                                 if (position<PicturesActivity.images.size()-1) {
                                     finish();
                                     Intent i = new Intent(getApplicationContext(), FullImageActivity.class);
@@ -150,15 +135,16 @@ public class FullImageActivity extends AppCompatActivity {
                             }
                             else {
                                 getSupportActionBar().show();
-                                decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
+                                //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
                                 mainNav.setVisibility(View.VISIBLE);
                             }
                         }
                         break;
                     }
                 }
+
                 if (PicturesActivity.hideToolbar == 0) {
-                    decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
+                    //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
                     mainNav.setVisibility(View.VISIBLE);
                     getSupportActionBar().show();
                 }
@@ -168,6 +154,7 @@ public class FullImageActivity extends AppCompatActivity {
                     mainNav.setVisibility(View.GONE);
                     getSupportActionBar().hide();
                 }
+
                 return false;
             }
         });
@@ -187,7 +174,7 @@ public class FullImageActivity extends AppCompatActivity {
                     return true;
                 }
                 if (id == R.id.nav_share) {
-                    startActivity( Intent.createChooser( emailIntent(), "Send EMAIL Using...") );
+                    startActivity( Intent.createChooser( emailIntent(), "Send image Using...") );
                     return true;
                 }
                 if (id == R.id.nav_delete) {
@@ -217,7 +204,6 @@ public class FullImageActivity extends AppCompatActivity {
         final File photoFile = new File(returnUri);
 
         shareIntent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(FullImageActivity.this,"hcmus.mdsd.fitsealbum", photoFile));
-        startActivity(Intent.createChooser(shareIntent, "Share image using"));
 
         return shareIntent;
 
@@ -263,17 +249,15 @@ public class FullImageActivity extends AppCompatActivity {
             final DecimalFormat format = new DecimalFormat("#.##"); // Tạo format cho size
             final double length = file.length();    // Lấy độ dài file
             String sLength;
-            if (length > 1024 * 1024)
-            {
+
+            if (length > 1024 * 1024) {
                 sLength = format.format(length / (1024 * 1024)) + " MB";
             }
-            else
-            {
+            else {
                 if (length > 1024) {
                     sLength = format.format(length / 1024) + " KB";
                 }
-                else
-                {
+                else {
                     sLength = format.format(length) + " B";
                 }
             }
@@ -284,15 +268,23 @@ public class FullImageActivity extends AppCompatActivity {
                         "\n\nSize: " + sLength +
                         "\n\nFile path: " + returnUri +
                         Details;
-                // -----  Tạo dislog để xuất ra detail -----
-                // Tạo title để custom
+
+                // -----  Tạo dialog để xuất ra detail -----
                 TextView title = new TextView(getApplicationContext());
                 title.setPadding(46, 40, 0, 0);
                 title.setText("Details");
-                title.setTextColor(Color.BLACK);
                 title.setTextSize(23.0f);
                 title.setTypeface(null, Typeface.BOLD);
-                AlertDialog dialog = new AlertDialog.Builder(FullImageActivity.this).create();
+
+                if(myPrefs.loadNightModeState() == true){
+                    title.setTextColor(Color.WHITE);
+                    dialog = new AlertDialog.Builder(FullImageActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK).create();
+                }
+                else{
+                    title.setTextColor(Color.BLACK);
+                    dialog = new AlertDialog.Builder(FullImageActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_LIGHT).create();
+                }
+
                 dialog.setCustomTitle(title);
                 dialog.setMessage(Details);
                 dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Close",
@@ -339,10 +331,16 @@ public class FullImageActivity extends AppCompatActivity {
 
         // Lấy aperture
         final DecimalFormat apertureFormat = new DecimalFormat("#.#"); // Tạo format cho aperture
-        String aperture = exif.getAttribute(ExifInterface.TAG_APERTURE);
-        Double aperture_double = Double.parseDouble(aperture);
-        apertureFormat.format(aperture_double);
-        myAttribute += "\n\nAperture: f/" + aperture_double + "\n\n";
+        String aperture = exif.getAttribute(ExifInterface.TAG_F_NUMBER);
+
+        if (aperture != null) {
+            Double aperture_double = Double.parseDouble(aperture);
+            apertureFormat.format(aperture_double);
+            myAttribute += "\n\nAperture: f/" + aperture_double + "\n\n";
+        }
+        else {
+            myAttribute += "\n\nAperture: unknown\n\n";
+        }
 
         // Lấy exposure time
         String ExposureTime = exif.getAttribute(ExifInterface.TAG_EXPOSURE_TIME);
@@ -351,12 +349,10 @@ public class FullImageActivity extends AppCompatActivity {
         ExposureTime = 1 + "/" + String.format("%.0f", Denominator);
         myAttribute += "Exposure Time: " + ExposureTime + "s\n\n";
 
-        if (exif.getAttributeInt(ExifInterface.TAG_FLASH, 0) == 0)
-        {
+        if (exif.getAttributeInt(ExifInterface.TAG_FLASH, 0) == 0){
             myAttribute += "Flash: Off\n\n";
         }
-        else
-        {
+        else {
             myAttribute += "Flash: On\n\n";
         }
 

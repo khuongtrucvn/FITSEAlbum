@@ -2,6 +2,7 @@ package com.example.a8560p.fitsealbum;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -39,13 +40,27 @@ public class ImageAdapter extends BaseAdapter {
     public View getView(final int position, View convertView,
                         ViewGroup parent) {
         ImageView picturesView;
+
+        //GridView grdView = (GridView)findViewById(R.id.galleryGridView);
+        //int column = grdView.getNumColumns();
+        int column = 4;
+        int screenWidth =  Resources.getSystem().getDisplayMetrics().widthPixels;
+        int screenHeight =  Resources.getSystem().getDisplayMetrics().heightPixels;
+
+        if (screenWidth > screenHeight) {
+            column = 6;
+        }
+
+        int sizeOfImage = (screenWidth - (column + 1) * 8) / column;
+
         if (convertView == null) {
             picturesView = new ImageView(context);
             picturesView.setScaleType(ImageView.ScaleType.FIT_CENTER);
             picturesView
-                    .setLayoutParams(new GridView.LayoutParams(230, 230));
+                    .setLayoutParams(new GridView.LayoutParams(sizeOfImage, sizeOfImage));
 
-        } else {
+        }
+        else {
             picturesView = (ImageView) convertView;
         }
 
@@ -53,27 +68,24 @@ public class ImageAdapter extends BaseAdapter {
                 .apply(new RequestOptions()
                         .placeholder(R.mipmap.ic_launcher).centerCrop())
                 .into(picturesView);
+
         return picturesView;
     }
 
-    private ArrayList<String> getAllShownImagesPath(Activity activity) {
+    private ArrayList<String> getAllShownImagesPath(Activity activity)
+    {
         Uri uri;
         Cursor cursor;
-        int column_index_data, column_index_folder_name;
+        int column_index_data;
         ArrayList<String> listOfAllImages = new ArrayList<String>();
         String absolutePathOfImage = null;
-
-        uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        context.grantUriPermission("id", uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        context.revokeUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
         String[] projection = {MediaStore.MediaColumns.DATA,
                 MediaStore.Images.Media.BUCKET_DISPLAY_NAME, MediaStore.Images.Media.DATE_MODIFIED};
 
-        cursor = activity.getContentResolver().query(uri, projection, null,
-                null, "DATE_MODIFIED DESC");
+        cursor = activity.getContentResolver().query(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                projection, null, null, "DATE_MODIFIED DESC");
         column_index_data = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-        column_index_folder_name = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
         while (cursor.moveToNext()) {
             absolutePathOfImage = cursor.getString(column_index_data);
             listOfAllImages.add(absolutePathOfImage);
