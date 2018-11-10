@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -121,6 +122,8 @@ public class FullImageActivity extends AppCompatActivity {
                                     finish();
                                     Intent i = new Intent(getApplicationContext(), FullImageActivity.class);
                                     i.putExtra("id", position - 1);
+                                    i.putExtra("path", PicturesActivity.images.get(position-1));
+                                    i.putExtra("allPath", PicturesActivity.images);
                                     startActivity(i);
                                 }
                             }
@@ -131,6 +134,8 @@ public class FullImageActivity extends AppCompatActivity {
                                     finish();
                                     Intent i = new Intent(getApplicationContext(), FullImageActivity.class);
                                     i.putExtra("id", position + 1);
+                                    i.putExtra("path", PicturesActivity.images.get(position + 1));
+                                    i.putExtra("allPath", PicturesActivity.images);
                                     startActivity(i);
                                 }
                             }
@@ -211,7 +216,7 @@ public class FullImageActivity extends AppCompatActivity {
         shareIntent.setType("image/jpg");
         final File photoFile = new File(returnUri);
 
-        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(photoFile));
+        shareIntent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(FullImageActivity.this,"hcmus.mdsd.fitsealbum", photoFile));
         startActivity(Intent.createChooser(shareIntent, "Share image using"));
 
         return shareIntent;
@@ -317,6 +322,7 @@ public class FullImageActivity extends AppCompatActivity {
     private String ShowExif(ExifInterface exif)
     {
         String myAttribute="";
+
         if(exif.getAttributeInt(ExifInterface.TAG_IMAGE_WIDTH, 0) == 0)
         {
             return myAttribute;
@@ -330,9 +336,21 @@ public class FullImageActivity extends AppCompatActivity {
                 return myAttribute;
             }
         }
-        //myAttribute += "\n\nAperture: " + exif.getAttribute(ExifInterface.TAG_APERTURE) + "\n\n";
-        myAttribute += "\n\nAperture: " + exif.getAttribute(ExifInterface.TAG_F_NUMBER) + "\n\n";
-        myAttribute += "Exposure Time: " + exif.getAttribute(ExifInterface.TAG_EXPOSURE_TIME) + "s\n\n";
+
+        // Lấy aperture
+        final DecimalFormat apertureFormat = new DecimalFormat("#.#"); // Tạo format cho aperture
+        String aperture = exif.getAttribute(ExifInterface.TAG_APERTURE);
+        Double aperture_double = Double.parseDouble(aperture);
+        apertureFormat.format(aperture_double);
+        myAttribute += "\n\nAperture: f/" + aperture_double + "\n\n";
+
+        // Lấy exposure time
+        String ExposureTime = exif.getAttribute(ExifInterface.TAG_EXPOSURE_TIME);
+        Double ExposureTime_double = Double.parseDouble(ExposureTime);
+        Double Denominator = 1 / ExposureTime_double;
+        ExposureTime = 1 + "/" + String.format("%.0f", Denominator);
+        myAttribute += "Exposure Time: " + ExposureTime + "s\n\n";
+
         if (exif.getAttributeInt(ExifInterface.TAG_FLASH, 0) == 0)
         {
             myAttribute += "Flash: Off\n\n";
@@ -341,11 +359,14 @@ public class FullImageActivity extends AppCompatActivity {
         {
             myAttribute += "Flash: On\n\n";
         }
+
         myAttribute += "Focal Length: " + exif.getAttributeDouble(ExifInterface.TAG_FOCAL_LENGTH, 0) + "mm\n\n";
         myAttribute += "ISO Value: " + exif.getAttribute(ExifInterface.TAG_ISO_SPEED_RATINGS) + "\n\n";
         myAttribute += "Model: " + exif.getAttribute(ExifInterface.TAG_MODEL);
+
         return myAttribute;
     }
+
     private String getTagString(String tag, ExifInterface exif)
     {
         return(tag + " : " + exif.getAttribute(tag) + "\n");
