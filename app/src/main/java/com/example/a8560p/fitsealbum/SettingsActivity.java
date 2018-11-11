@@ -94,6 +94,7 @@ public class SettingsActivity extends AppCompatActivity{
         btnAbout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                startActivity(new Intent(SettingsActivity.this,AboutActivity.class));
             }
         });
     }
