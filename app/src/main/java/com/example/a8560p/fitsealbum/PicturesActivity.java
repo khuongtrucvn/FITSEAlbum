@@ -54,10 +54,6 @@ public class PicturesActivity extends Fragment{
             }
         });
 
-        String msg = "Screen res: " + String.valueOf(screenHeight) + " x " + String.valueOf(screenWidth) + "\n";
-        msg += "Number of columns: " + String.valueOf(column);
-        Toast.makeText(this.getActivity(),msg, Toast.LENGTH_SHORT).show();
-
         return pictures;
     }
 }

@@ -40,10 +40,11 @@ public class FullImageActivity extends AppCompatActivity
     ImageView imageView;
     BottomNavigationView mainNav;
     int position;
-    private float x1,x2;
+    private float x1,x2, y1, y2;
     static final int MIN_DISTANCE = 150;
     View decorView;
     AlertDialog dialog;
+    TextView txtDateModified;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -69,16 +70,20 @@ public class FullImageActivity extends AppCompatActivity
 
         mainNav=(BottomNavigationView)findViewById(R.id.nav_bottom);
 
+        txtDateModified = (TextView)findViewById(R.id.txtDateModified);
+
         if (PicturesActivity.hideToolbar == 0) {
             mainNav.setVisibility(View.VISIBLE);
             //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
             getSupportActionBar().show();
+            txtDateModified.setVisibility(View.VISIBLE);
         }
         else {
             decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                     | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
             mainNav.setVisibility(View.GONE);
             getSupportActionBar().hide();
+            txtDateModified.setVisibility(View.GONE);
         }
 
         Intent i = getIntent();
@@ -89,19 +94,29 @@ public class FullImageActivity extends AppCompatActivity
                 .apply(new RequestOptions()
                         .placeholder(R.mipmap.ic_launcher).fitCenter())
                 .into(imageView);
-imageView.setOnTouchListener(new View.OnTouchListener() {
+
+        String returnUri = i.getExtras().getString("path"); // Lấy đường dẫn trong intent
+        SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm"); // Tạo format date để lưu Date
+        File file = new File(returnUri);
+        txtDateModified.setText(sdf.format(file.lastModified()));
+
+        imageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch(event.getAction())
                 {
                     case MotionEvent.ACTION_DOWN: {
                         x1 = event.getX();
+                        y1 = event.getY();
                         break;
                     }
                     case MotionEvent.ACTION_UP: {
                         x2 = event.getX();
+                        y2 = event.getY();
                         float deltaX = x2 - x1;
-                        if (Math.abs(deltaX) > MIN_DISTANCE) {
+                        float deltaY = y2 - y1;
+
+                        if (Math.abs(deltaX) >= MIN_DISTANCE && Math.abs(deltaY) <= MIN_DISTANCE/2) {
                             // Left to Right swipe action
                             if (x2 > x1) {
                                 if (position>0) {
@@ -114,7 +129,7 @@ imageView.setOnTouchListener(new View.OnTouchListener() {
                                 }
                             }
                             // Right to left swipe action
-                            else {
+                            else if (x2 < x1){
                                 if (position<PicturesActivity.images.size()-1) {
                                     finish();
                                     Intent i = new Intent(getApplicationContext(), FullImageActivity.class);
@@ -124,19 +139,26 @@ imageView.setOnTouchListener(new View.OnTouchListener() {
                                     startActivity(i);
                                 }
                             }
-                        } else {
+                        }
+                        else if(Math.abs(deltaY) >= MIN_DISTANCE && Math.abs(deltaX) <= MIN_DISTANCE/2 && y2 < y1){
+                            finish();
+                        }
+                        else {
                             // consider as something else - a screen tap for example
                             PicturesActivity.hideToolbar = (PicturesActivity.hideToolbar + 1) % 2;
+
                             if (PicturesActivity.hideToolbar == 1) {
                                 getSupportActionBar().hide();
                                 decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                                         | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
                                 mainNav.setVisibility(View.GONE);
+                                txtDateModified.setVisibility(View.GONE);
                             }
                             else {
                                 getSupportActionBar().show();
                                 //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
                                 mainNav.setVisibility(View.VISIBLE);
+                                txtDateModified.setVisibility(View.VISIBLE);
                             }
                         }
                         break;
@@ -147,14 +169,15 @@ imageView.setOnTouchListener(new View.OnTouchListener() {
                     //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
                     mainNav.setVisibility(View.VISIBLE);
                     getSupportActionBar().show();
+                    txtDateModified.setVisibility(View.VISIBLE);
                 }
                 else {
                     decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                             | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
                     mainNav.setVisibility(View.GONE);
                     getSupportActionBar().hide();
+                    txtDateModified.setVisibility(View.GONE);
                 }
-
                 return false;
             }
         });
@@ -278,11 +301,13 @@ imageView.setOnTouchListener(new View.OnTouchListener() {
 
                 if(myPrefs.loadNightModeState() == true){
                     title.setTextColor(Color.WHITE);
-                    dialog = new AlertDialog.Builder(FullImageActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK).create();
+                    //dialog = new AlertDialog.Builder(FullImageActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK).create();
+                    dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
                 }
                 else{
                     title.setTextColor(Color.BLACK);
-                    dialog = new AlertDialog.Builder(FullImageActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_LIGHT).create();
+                    //dialog = new AlertDialog.Builder(FullImageActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_LIGHT).create();
+                    dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
                 }
 
                 dialog.setCustomTitle(title);

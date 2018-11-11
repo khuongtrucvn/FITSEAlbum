@@ -34,4 +34,17 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true">
     </android.support.design.widget.BottomNavigationView>
+
+    <TextView
+        android:id="@+id/txtDateModified"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="55dp"
+        android:background="#66000000"
+        android:text="Date modified"
+        android:textAlignment="center"
+        android:textColor="#ffffff"
+        android:textSize="16sp" />
 </RelativeLayout>
