@@ -2,13 +2,19 @@ package com.example.a8560p.fitsealbum;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.WallpaperManager;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.media.ExifInterface;
@@ -327,6 +333,73 @@ public class FullImageActivity extends AppCompatActivity
         }
         else if (id == R.id.action_delete) {
             // perform DELETE operations...
+            Intent i = getIntent(); // Lấy intent
+            final String returnUri = i.getExtras().getString("path"); // Lấy đường dẫn trong intent
+            final File photoFile = new File( returnUri);
+            // Tạo biến builder để tạo dialog để xác nhận có xoá file hay không
+            AlertDialog builder;
+            if (myPrefs.loadNightModeState()) {
+                builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
+            } else {
+                builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
+            }
+            builder.setMessage("Are you sure you want to delete this item ?");
+            builder.setButton(Dialog.BUTTON_POSITIVE,"YES", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    //---- Dưới đây là bài hướng dẫn xoá ảnh sử dụng ContentResolver trên diễn đàn stackoverflow ----
+                    // Nguồn: http://stackoverflow.com/a/20780472#1#L0
+                    // Khởi tạo ID
+                    String[] projection = { MediaStore.Images.Media._ID };
+                    // Lấy thông tin đường dẫn
+                    String selection = MediaStore.Images.Media.DATA + " = ?";
+                    String[] selectionArgs = new String[] { photoFile.getAbsolutePath() };
+                    //
+                    Uri queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                    ContentResolver contentResolver = getContentResolver();
+                    Cursor c = contentResolver.query(queryUri, projection, selection, selectionArgs, null);
+                    if (c.moveToFirst()) {
+                        // Tìm thấy ID. Xoá ảnh dựa nhờ content provider
+                        long id = c.getLong(c.getColumnIndexOrThrow(MediaStore.Images.Media._ID));
+                        Uri deleteUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+                        contentResolver.delete(deleteUri, null, null);
+                    } else {
+                        // File không có database
+                    }
+                    c.close();
+                    Toast.makeText(FullImageActivity.this, "Item has been deleted", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    for(int i = position;i<PicturesActivity.images.size()-1;i++)
+                    {
+                        PicturesActivity.images.set(i,PicturesActivity.images.get(i+1));
+                    }
+                    PicturesActivity.images.remove(PicturesActivity.images.size()-1);
+                    int currentNumberOfPictures = PicturesActivity.images.size();
+                    if (currentNumberOfPictures==0) {
+                        finish();
+                    } else if (position == currentNumberOfPictures){
+                        finish();
+                        Intent i = new Intent(getApplicationContext(), FullImageActivity.class);
+                        i.putExtra("id", position - 1);
+                        i.putExtra("path", PicturesActivity.images.get(position - 1));
+                        i.putExtra("allPath", PicturesActivity.images);
+                        startActivity(i);
+                    }
+                    else {
+                        finish();
+                        Intent i = new Intent(getApplicationContext(), FullImageActivity.class);
+                        i.putExtra("id", position);
+                        i.putExtra("path", PicturesActivity.images.get(position));
+                        i.putExtra("allPath", PicturesActivity.images);
+                        startActivity(i);
+                    }
+                }
+            });
+            builder.setButton(Dialog.BUTTON_NEGATIVE,"NO", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            builder.show();
             return true;
         }
         else if(id == android.R.id.home){
