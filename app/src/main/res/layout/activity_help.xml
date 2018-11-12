@@ -20,30 +20,30 @@
 
         <ImageView
             android:layout_width="wrap_content"
-            android:layout_height="400dp"
+            android:layout_height="500dp"
             android:background="@drawable/picture_view"/>
 
         <ImageView
             android:layout_width="wrap_content"
-            android:layout_height="400dp"
+            android:layout_height="500dp"
             android:layout_marginTop="20dp"
             android:background="@drawable/navigation_drawer"/>
 
         <ImageView
             android:layout_width="wrap_content"
-            android:layout_height="400dp"
+            android:layout_height="500dp"
             android:layout_marginTop="20dp"
             android:background="@drawable/status_bar"/>
 
         <ImageView
             android:layout_width="wrap_content"
-            android:layout_height="400dp"
+            android:layout_height="500dp"
             android:layout_marginTop="20dp"
             android:background="@drawable/navigation_bottom"/>
 
         <ImageView
             android:layout_width="wrap_content"
-            android:layout_height="400dp"
+            android:layout_height="500dp"
             android:layout_marginTop="20dp"
             android:layout_marginBottom="30dp"
             android:background="@drawable/menu_settings"/>

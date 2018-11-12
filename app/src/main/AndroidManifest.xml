@@ -36,8 +36,7 @@
             android:theme="@style/DayNoActionBarTheme"/>
         <activity android:name=".FeedbackActivity"
             android:theme="@style/DayNoActionBarTheme"/>
-        <activity android:name=".HelpActivity"
-            android:theme="@style/DayNoActionBarTheme"/>
+        <activity android:name=".HelpActivity"/>
         <activity android:name=".SetPasswordActivity"
             android:theme="@style/DayNoActionBarTheme"
             android:screenOrientation="portrait"/>
