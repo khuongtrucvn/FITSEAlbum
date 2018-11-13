@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     PicturesActivity pictures;
     AlbumActivity album;
     FavoriteActivity favorite;
+    CloudStorageActivity cloud;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +109,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ft = getFragmentManager().beginTransaction();
             favorite = FavoriteActivity.newInstance();
             ft.replace(R.id.content_frame, favorite);
+            ft.commit();
+        }
+        else if (id == R.id.nav_cloud) {
+            toolBar.setTitle("Cloud Storage");
+
+            ft = getFragmentManager().beginTransaction();
+            cloud = CloudStorageActivity.newInstance();
+            ft.replace(R.id.content_frame, cloud);
             ft.commit();
         }
         else if (id == R.id.nav_settings) {
