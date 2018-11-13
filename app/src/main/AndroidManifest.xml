@@ -42,6 +42,9 @@
             android:screenOrientation="portrait"/>
         <activity android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
             android:theme="@style/DayAppTheme"/>
+        <activity android:name=".SlideShowAcitivity"
+            android:theme="@style/DayNoActionBarTheme"/>
+
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="hcmus.mdsd.fitsealbum"
