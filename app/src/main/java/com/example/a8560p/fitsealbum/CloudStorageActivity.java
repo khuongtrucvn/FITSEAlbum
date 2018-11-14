@@ -20,11 +20,11 @@ import java.util.Iterator;
 public class CloudStorageActivity extends Fragment{
 
     View cloud;
-    /*ListView lvCloudImage;
+    ListView lvCloudImage;
     ArrayList<CloudImage> arrayCloudImage;
     CloudImageAdapter adapter=null;
 
-    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    /*FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference mData = database.getReference("CloudImage");*/
 
     public static CloudStorageActivity newInstance() {

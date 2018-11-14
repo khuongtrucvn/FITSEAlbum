@@ -36,25 +36,34 @@ public class AlbumImageAdapter extends BaseAdapter {
 
     public View getView(int position, View convertView, ViewGroup parent) {
         ImageView picturesView;
+        //TextView textView = (TextView) convertView.findViewById(R.id.txtFolderName);
+
         if (convertView == null) {
             picturesView = new ImageView(context);
             picturesView.setScaleType(ImageView.ScaleType.FIT_CENTER);
             int column = 1;
             int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
             int screenHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
+
             if (screenWidth > screenHeight) {
                 column = 2;
             }
+
             int sizeOfImage = screenWidth / column;
             picturesView.setLayoutParams(new GridView.LayoutParams(sizeOfImage, sizeOfImage / 2));
-        } else {
+        }
+        else {
             picturesView = (ImageView) convertView;
         };
+
         Glide.with(context).load(AlbumActivity.folderAlbum.get(position).GetNewestFile().getPath())
                 .apply(new RequestOptions()
                         //.placeholder(R.mipmap.ic_launcher).centerCrop())
                         .placeholder(null).centerCrop())
                 .into(picturesView);
+
+        //textView.setText(AlbumActivity.folderAlbum.get(position).getName());
+
         return picturesView;
     }
 

@@ -66,7 +66,7 @@ public class ImageAdapter extends BaseAdapter {
 
         Glide.with(context).load(PicturesActivity.images.get(position))
                 .apply(new RequestOptions()
-                        .placeholder(R.mipmap.ic_launcher).centerCrop())
+                        .placeholder(null).centerCrop())
                 .into(picturesView);
 
         return picturesView;

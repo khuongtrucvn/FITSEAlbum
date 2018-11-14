@@ -2,7 +2,9 @@ package com.example.a8560p.fitsealbum;
 
 import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -11,6 +13,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import static com.example.a8560p.fitsealbum.FavoriteActivity.favoriteImages;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
 
@@ -22,8 +29,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FragmentTransaction ft;
     PicturesActivity pictures;
     AlbumActivity album;
-    FavoriteActivity favorite;
     CloudStorageActivity cloud;
+    FavoriteActivity favorite;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +43,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             setTheme(R.style.DayNoActionBarTheme);
         }
         super.onCreate(savedInstanceState);
+
+        SharedPreferences sharedPreferences = PreferenceManager
+                .getDefaultSharedPreferences(getApplicationContext());
+        Gson gson = new Gson();
+        String json = sharedPreferences.getString("savedFavoriteImages","");
+        Type type = new TypeToken<ArrayList<String>>(){}.getType();
+        favoriteImages = gson.fromJson(json, type);
+
         setContentView(R.layout.activity_main);
 
         toolBar = (Toolbar) findViewById(R.id.nav_actionBar);
@@ -97,7 +112,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         else if (id == R.id.nav_album) {
             toolBar.setTitle("Album");
-
             ft = getFragmentManager().beginTransaction();
             album = AlbumActivity.newInstance();
             ft.replace(R.id.content_frame, album);
@@ -113,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         else if (id == R.id.nav_cloud) {
             toolBar.setTitle("Cloud Storage");
-
             ft = getFragmentManager().beginTransaction();
             cloud = CloudStorageActivity.newInstance();
             ft.replace(R.id.content_frame, cloud);

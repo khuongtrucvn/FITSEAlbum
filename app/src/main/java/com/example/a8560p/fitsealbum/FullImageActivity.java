@@ -3,28 +3,39 @@ package com.example.a8560p.fitsealbum;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.WallpaperManager;
 import android.content.ContentResolver;
 import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Picture;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.annotation.Nullable;
+import android.support.media.ExifInterface;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
-import android.support.media.ExifInterface;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.MenuView;
 import android.support.v7.widget.Toolbar;
+
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -34,21 +45,43 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.app.WallpaperManager;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
-import com.theartofdev.edmodo.cropper.CropImage;
-import com.theartofdev.edmodo.cropper.CropImageView;
-
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.github.chrisbanes.photoview.PhotoView;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.theartofdev.edmodo.cropper.CropImage;
+import com.theartofdev.edmodo.cropper.CropImageView;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import com.google.gson.Gson;
+import static android.view.View.VISIBLE;
 
 public class FullImageActivity extends AppCompatActivity {
 
     Toolbar toolBar;
     ImageView imageView;
+    //PhotoView imageView;
     TextView txtDateModified;
     int position;
     BottomNavigationView mainNav;
@@ -56,6 +89,13 @@ public class FullImageActivity extends AppCompatActivity {
     static final int MIN_DISTANCE = 150;
     View decorView;
     MyPrefs myPrefs;
+    static boolean favoritedImage = false;
+
+    /*FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference mData = database.getReference("CloudImage");
+
+    FirebaseStorage storage = FirebaseStorage.getInstance();
+    StorageReference storageRef = storage.getReference("CloudImage");*/
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -80,7 +120,7 @@ public class FullImageActivity extends AppCompatActivity {
                 | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
         mainNav = (BottomNavigationView) findViewById(R.id.nav_bottom);
-        txtDateModified = (TextView)findViewById(R.id.txtDateModified);
+        txtDateModified = (TextView) findViewById(R.id.txtDateModified);
         if (PicturesActivity.hideToolbar == 0) {
             //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
             mainNav.setVisibility(View.VISIBLE);
@@ -96,15 +136,20 @@ public class FullImageActivity extends AppCompatActivity {
 
         Intent i = getIntent();
         imageView = (ImageView) findViewById(R.id.imageView);
+        //imageView = (PhotoView) (ImageView) findViewById(R.id.imageView);
 
         //Navigation bottom onClickListener
         mainNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-                switch (menuItem.getItemId())
-                {
+                switch (menuItem.getItemId()) {
                     case R.id.nav_edit: {
-                        Toast.makeText(getApplicationContext(), "Edit Image", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(), "Edit Image", Toast.LENGTH_SHORT).show();
+                        //imageView.setRotation(imageView.getRotation() + 90);
+                        Intent editIntent = new Intent(Intent.ACTION_EDIT);
+                        editIntent.setDataAndType(FileProvider.getUriForFile(getApplicationContext(),"hcmus.mdsd.fitsealbum" , new File(PicturesActivity.images.get(position).toString())), "image/*");
+                        editIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        startActivity(Intent.createChooser(editIntent, null));
                         return true;
                     }
                     case R.id.nav_crop: {
@@ -120,7 +165,7 @@ public class FullImageActivity extends AppCompatActivity {
                         Intent i = getIntent(); // Lấy intent
                         final String returnUri = i.getExtras().getString("path"); // Lấy đường dẫn trong intent
 
-                        final File photoFile = new File( returnUri);
+                        final File photoFile = new File(returnUri);
 
                         // Tạo biến builder để tạo dialog để xác nhận có xoá file hay không
                         AlertDialog builder;
@@ -132,17 +177,17 @@ public class FullImageActivity extends AppCompatActivity {
                         }
 
                         builder.setMessage("Are you sure you want to delete this item ?");
-                        builder.setButton(Dialog.BUTTON_POSITIVE,"YES", new DialogInterface.OnClickListener() {
+                        builder.setButton(Dialog.BUTTON_POSITIVE, "YES", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 //---- Dưới đây là bài hướng dẫn xoá ảnh sử dụng ContentResolver trên diễn đàn stackoverflow ----
                                 // Nguồn: http://stackoverflow.com/a/20780472#1#L0
 
                                 // Khởi tạo ID
-                                String[] projection = { MediaStore.Images.Media._ID };
+                                String[] projection = {MediaStore.Images.Media._ID};
 
                                 // Lấy thông tin đường dẫn
                                 String selection = MediaStore.Images.Media.DATA + " = ?";
-                                String[] selectionArgs = new String[] { photoFile.getAbsolutePath() };
+                                String[] selectionArgs = new String[]{photoFile.getAbsolutePath()};
 
                                 //
                                 Uri queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
@@ -161,13 +206,18 @@ public class FullImageActivity extends AppCompatActivity {
 
                                 Toast.makeText(FullImageActivity.this, "Item has been deleted", Toast.LENGTH_SHORT).show();
                                 dialog.dismiss();
-                                for(int i = position;i<PicturesActivity.images.size()-1;i++)
+                                for (int i = position; i < PicturesActivity.images.size() - 1; i++)
                                 {
-                                    PicturesActivity.images.set(i,PicturesActivity.images.get(i+1));
+                                    PicturesActivity.images.set(i, PicturesActivity.images.get(i + 1));
                                 }
-                                PicturesActivity.images.remove(PicturesActivity.images.size()-1);
+                                PicturesActivity.images.remove(PicturesActivity.images.size() - 1);
+                                // Nếu ảnh được yêu thích thì khi xoá ảnh phải xoá trong danh sách các ảnh được yêu thích luôn
+                                if (favoritedImage)
+                                {
+                                    FavoriteActivity.favoriteImages.remove(returnUri);
+                                }
                                 int currentNumberOfPictures = PicturesActivity.images.size();
-                                if (currentNumberOfPictures==0) {
+                                if (currentNumberOfPictures == 0) {
                                     finish();
                                 } else if (position == currentNumberOfPictures){
                                     finish();
@@ -187,7 +237,7 @@ public class FullImageActivity extends AppCompatActivity {
                                 }
                             }
                         });
-                        builder.setButton(Dialog.BUTTON_NEGATIVE,"NO", new DialogInterface.OnClickListener() {
+                        builder.setButton(Dialog.BUTTON_NEGATIVE, "NO", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
                             }
@@ -287,14 +337,48 @@ public class FullImageActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+//        imageView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (PicturesActivity.hideToolbar == 0) {
+//                    //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
+//                    mainNav.setVisibility(View.VISIBLE);
+//                    txtDateModified.setVisibility(View.VISIBLE);
+//                    getSupportActionBar().show();
+//                } else {
+//                    getSupportActionBar().hide();
+//                    mainNav.setVisibility(View.GONE);
+//                    txtDateModified.setVisibility(View.GONE);
+//                    decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+//                            | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+//                }
+//            }
+//        });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; add items to the action bar
         getMenuInflater().inflate(R.menu.image_main, menu);
+
+        favoritedImage = false;
+        Intent i = getIntent();
+        String abc = i.getExtras().getString("path"); // Lấy đường dẫn trong intent
+        // Nếu tồn tại đường dẫn của ảnh trong favoriteImages
+        if (null != FavoriteActivity.favoriteImages && !FavoriteActivity.favoriteImages.isEmpty()) {
+            // Nếu ảnh đang chiếu có trong số ảnh được yêu thích thì chuyển tim sang màu đỏ
+            if (FavoriteActivity.favoriteImages.contains(abc))
+            {
+                MenuItem menuItem = menu.findItem(R.id.action_favorite);
+                menuItem.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.round_favorite_24_clicked)); // đổi màu đỏ
+                favoritedImage = true; // Đánh dấu ảnh đang chiếu đã được yêu thích
+            }
+        }
+
         return true;
     }
+
 
     // return a SHARED intent to deliver an email
     private Intent emailIntent() {
@@ -320,24 +404,104 @@ public class FullImageActivity extends AppCompatActivity {
         int id = item.getItemId();
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-
         if (id == R.id.action_favorite) {
-            MenuView.ItemView favorite_button;
-            favorite_button = (MenuView.ItemView) findViewById(R.id.action_favorite);
-            //favorite_button.setIcon(ContextCompat.getDrawable(this, R.drawable.round_favorite_24_pressed));
-            favorite_button.setIcon(ContextCompat.getDrawable(this, R.drawable.round_favorite_24));
-
+            if (favoritedImage)
+            {
+                MenuView.ItemView favorite_button;
+                favorite_button = (MenuView.ItemView) findViewById(R.id.action_favorite);
+                favorite_button.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.round_favorite_24));
+                FavoriteActivity.favoriteImages.remove(PicturesActivity.images.get(position));
+                favoritedImage = false;
+            }
+            else // Nếu ảnh chưa được yêu thích thì khi bấm vào nút Favorite, đổi tim thành màu đỏ và thêm ảnh vào danh sách ảnh được yêu thích
+            {
+                MenuView.ItemView favorite_button;
+                favorite_button = (MenuView.ItemView) findViewById(R.id.action_favorite);
+                favorite_button.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.round_favorite_24_clicked));
+                if (null != FavoriteActivity.favoriteImages && !FavoriteActivity.favoriteImages.isEmpty()) {
+                    FavoriteActivity.favoriteImages.add(PicturesActivity.images.get(position));
+                }
+                else
+                {
+                    FavoriteActivity.favoriteImages = new ArrayList<>();
+                    FavoriteActivity.favoriteImages.add(PicturesActivity.images.get(position));
+                }
+                favoritedImage = true;
+            }
+            // Cập nhật lại ảnh để lưu vào SharedPreferences
+            // (Lưu vào SharedPreferences để có thể lấy được thông tin của những ảnh đã được yêu thích khi thoát ứng dụng và bật lại)
+            // Nguồn: https://stackoverflow.com/questions/14981233/android-arraylist-of-custom-objects-save-to-sharedpreferences-serializable/40237149#40237149
+            SharedPreferences sharedPreferences = PreferenceManager
+                    .getDefaultSharedPreferences(this.getApplicationContext());
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            Gson gson = new Gson();
+            String json = gson.toJson(FavoriteActivity.favoriteImages);
+            editor.putString("savedFavoriteImages", json);
+            editor.commit();
             return true;
         }
-        else if (id == R.id.action_slideshow) {
+        else if (id == R.id.action_upload) {
+            /*ConnectivityManager conMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
+
+            if (activeNetwork != null && activeNetwork.isConnected()) {
+
+                Intent i = getIntent();
+                String filePath = i.getExtras().getString("path");
+                final String imgName = new File(filePath).getName();
+
+                StorageReference mountainsRef = storageRef.child(imgName);
+
+                imageView.setDrawingCacheEnabled(true);
+                imageView.buildDrawingCache();
+                Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                byte[] data = baos.toByteArray();
+                UploadTask uploadTask = mountainsRef.putBytes(data);
+                uploadTask.addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        Toast.makeText(FullImageActivity.this, "Lưu ảnh không thành công", Toast.LENGTH_SHORT).show();
+
+                    }
+                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        Toast.makeText(FullImageActivity.this, "Lưu ảnh thành công", Toast.LENGTH_SHORT).show();
+
+                        Task<Uri> urlTask = taskSnapshot.getStorage().getDownloadUrl();
+                        while (!urlTask.isSuccessful());
+                        Uri downloadUrl = urlTask.getResult();
+                        CloudImage con = new CloudImage(imgName, downloadUrl.toString());
+                        mData.push().setValue(con, new DatabaseReference.CompletionListener() {
+                            @Override
+                            public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+                                if(databaseError==null){
+                                    Toast.makeText(FullImageActivity.this, "Lưu dữ liệu thành công", Toast.LENGTH_SHORT).show();
+                                }
+                                else {
+                                    Toast.makeText(FullImageActivity.this, "Lưu dữ liệu không thành công", Toast.LENGTH_SHORT).show();
+
+                                }
+                            }
+                        });
+                    }
+                });
+            } else {
+                Toast.makeText(FullImageActivity.this, "Kiểm tra kết nối internet của bạn", Toast.LENGTH_SHORT).show();
+
+            }
+            return true;*/
+        } else if (id == R.id.action_slideshow) {
             // perform SLIDESHOW operations...
             Intent newIntentForSlideShowActivity = new Intent(FullImageActivity.this, SlideShowAcitivity.class);
             newIntentForSlideShowActivity.putExtra("id", position); // Lấy position id và truyền cho SlideShowActivity
             startActivity(newIntentForSlideShowActivity);
-
             return true;
-        }
-        else if (id == R.id.action_setBackground) {
+        } else if (id == R.id.action_rotate) {
+            imageView.setRotation(imageView.getRotation() + 90);
+        } else if (id == R.id.action_setBackground) {
             // perform SETBACKGROUND operations...
             WallpaperManager myWallpaperManager = WallpaperManager.getInstance(getApplicationContext());
             try {
@@ -418,9 +582,6 @@ public class FullImageActivity extends AppCompatActivity {
             }
 
             return true;
-        } else if (id == R.id.action_delete) {
-            // perform DELETE operations...
-            return true;
         } else if (id == android.R.id.home) {
             finish();
             return true;
@@ -476,6 +637,7 @@ public class FullImageActivity extends AppCompatActivity {
     }
 
     String nameImage;
+
     ///crop
     public void openCrop() {
         Intent i = getIntent();
@@ -488,6 +650,7 @@ public class FullImageActivity extends AppCompatActivity {
                     .start(this);
         }
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
@@ -499,30 +662,49 @@ public class FullImageActivity extends AppCompatActivity {
                 imageView.setDrawingCacheEnabled(true);
                 Bitmap b = imageView.getDrawingCache();
                 MediaStore.Images.Media.insertImage(getContentResolver(), b, nameImage + "_crop", "");
-                PicturesActivity.images.add(nameImage + "_crop");
-
-//                ByteArrayOutputStream blob = new ByteArrayOutputStream();
-//                b.compress(Bitmap.CompressFormat.JPEG, 100, blob);
-//                byte[] bitmapdata = blob.toByteArray();
-//                ContentValues values = new ContentValues();
-//                values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis()); // DATE HERE
-//                values.put(MediaStore.Images.Media.DATE_MODIFIED, System.currentTimeMillis());
-//                values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-//                values.put(MediaStore.MediaColumns.DATA, bitmapdata);
-//                values.put(MediaStore.MediaColumns.TITLE, "newcrop.JPG");
+//                File storageLoc = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES); //context.getExternalFilesDir(null);
 //
-//                this.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-//                PicturesActivity.images.add(nameImage + "_crop");
-                Glide.with(getApplicationContext()).load(nameImage + "_crop")
+//                //SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm");
+//
+//
+//
+//
+//                File file = new File(storageLoc, "tan" );
+//                try{
+//                    FileOutputStream fos = new FileOutputStream(file);
+//                    b.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+//                    fos.close();
+//                    scanFile(this, Uri.fromFile(file));
+//                } catch (FileNotFoundException e) {
+//                    e.printStackTrace();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+
+                PicturesActivity.images.add(nameImage + "_crop");
+                Glide.with(getApplicationContext()).load(PicturesActivity.images.get(0))
                         .apply(new RequestOptions()
                                 //.placeholder(R.mipmap.ic_launcher).fitCenter())
                                 .placeholder(null).fitCenter())
                         .into(imageView);
-            }
-            else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+
+                // cái đó là gì v load cái ảnh mới cắt vào glide trong giao diện đó ok
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
             }
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
+
+    public void openCloudStorageActivity() {
+        //Intent intent = new Intent(this,CloudStorageActivity.class);
+        Intent intent = new Intent(this.getApplicationContext(), CloudStorageActivity.class);
+        startActivity(intent);
+    }
+
+//    private static void scanFile(Context context, Uri imageUri) {
+//        Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+//        scanIntent.setData(imageUri);
+//        context.sendBroadcast(scanIntent);
+//    }
 }

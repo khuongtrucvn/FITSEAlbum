@@ -13,10 +13,22 @@
         android:title="Favortite"/>
 
     <item
+        android:id="@+id/action_upload"
+        android:orderInCategory="180"
+        app:showAsAction="never"
+        android:title="Upload to cloud"/>
+
+    <item
         android:id="@+id/action_slideshow"
         android:orderInCategory="180"
         app:showAsAction="never"
         android:title="Slideshow"/>
+
+    <item
+        android:id="@+id/action_rotate"
+        android:orderInCategory="180"
+        app:showAsAction="never"
+        android:title="Rotate"/>
 
     <item
         android:id="@+id/action_setBackground"
@@ -35,10 +47,4 @@
         android:orderInCategory="200"
         app:showAsAction="never"
         android:title="Details"/>
-
-    <item
-        android:id="@+id/action_delete"
-        android:orderInCategory="200"
-        app:showAsAction="never"
-        android:title="Delete"/>
 </menu>
