@@ -32,6 +32,8 @@ public class AlbumFolder implements Parcelable {
         mAlbumFiles.add(albumFile);
     }
 
+    public int getAlbumFolderSize(){ return mAlbumFiles.size();}
+
     protected AlbumFolder(Parcel in) {
         name = in.readString();
         mAlbumFiles = in.createTypedArrayList(AlbumFile.CREATOR);

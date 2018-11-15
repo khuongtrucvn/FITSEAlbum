@@ -41,7 +41,13 @@ public class CloudStorageActivity extends Fragment{
 
         adapter= new CloudImageAdapter(CloudStorageActivity.super.getActivity(),R.layout.image_items,arrayCloudImage);
         lvCloudImage.setAdapter(adapter);
-        loadData();*/
+        ConnectivityManager conMgr = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
+         if (activeNetwork != null && activeNetwork.isConnected()) {
+            loadData();
+        } else {
+            Toast.makeText(getContext(), "Check your internet connection and try again.", Toast.LENGTH_SHORT).show();
+        }*/
 
         return cloud;
     }
