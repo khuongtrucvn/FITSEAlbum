@@ -94,9 +94,9 @@ public class AlbumImageAdapter extends BaseAdapter {
         String title = "";
         title = AlbumActivity.folderAlbum.get(position).getName();
         if (AlbumActivity.folderAlbum.get(position).getAlbumFolderSize()==1)
-            title += " (1 item)";
+            title += " \n(1 item)";
         else
-            title += " (" + String.valueOf(AlbumActivity.folderAlbum.get(position).getAlbumFolderSize()) + " items)";
+            title += " \n(" + String.valueOf(AlbumActivity.folderAlbum.get(position).getAlbumFolderSize()) + " items)";
         mViewHolder.textView.setText(title);
         return convertView;
 
