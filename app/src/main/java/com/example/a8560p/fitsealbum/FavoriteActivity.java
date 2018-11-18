@@ -24,7 +24,7 @@ public class FavoriteActivity extends Fragment{
         favorite =(View) inflater.inflate(R.layout.activity_favorite,container, false);
         if (null != favoriteImages && !favoriteImages.isEmpty()) {
             GridView favoriteGallery = (GridView) favorite.findViewById(R.id.favoriteGalleryGridView);
-            favoriteGallery.setAdapter(new FavoriteImageAdapter(FavoriteActivity.super.getActivity()));
+            favoriteGallery.setAdapter(new ImageAdapter(FavoriteActivity.super.getActivity(), favoriteImages));
             int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
             int screenHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
             if (screenWidth > screenHeight) {

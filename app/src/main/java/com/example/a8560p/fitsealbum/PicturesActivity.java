@@ -15,37 +15,39 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 public class PicturesActivity extends Fragment{
+    //View
     View pictures;
-    Intent i;
+    //Mảng tĩnh chứa danh sách file
     public static ArrayList<String> images;
+    //Trạng thái ẩn/hiện của toolbar, 0 là hiện, 1 là ẩn
     static int hideToolbar = 0;
-
-    public static PicturesActivity newInstance() {
-        PicturesActivity fragment = new PicturesActivity();
-        return fragment;
-    }
+    //Tạo instance
+    public static PicturesActivity newInstance() { return new PicturesActivity(); }
 
     @Override
     public View onCreateView(LayoutInflater inflater,ViewGroup container,Bundle savedInstanceState) {
+        //Lấy view theo id của activity_pictures
         pictures = (View) inflater.inflate(R.layout.activity_pictures, container,false);
-
+        //Tạo gridview để hiển thị ảnh
         GridView gallery = (GridView) pictures.findViewById(R.id.galleryGridView);
-        gallery.setAdapter(new ImageAdapter(PicturesActivity.super.getActivity()));
-
-        int column = gallery.getNumColumns();
+        //Dùng hàm setAdapter
+        gallery.setAdapter(new ImageAdapter(this.getActivity()));
+        //Xác định số dòng, cột của gridview dựa vào màn hình
+        //Màn hình portrait thì 4 cột, màn hình landscape thì 6 cột
         int screenWidth =  Resources.getSystem().getDisplayMetrics().widthPixels;
         int screenHeight =  Resources.getSystem().getDisplayMetrics().heightPixels;
-
         if (screenWidth > screenHeight) {
-            column = 6;
-            gallery.setNumColumns(column);
+            gallery.setNumColumns(6);
         }
-
+        //Gán sự kiện click cho mỗi ảnh => xem ảnh full màn hình
         gallery.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
-                if (null != images && !images.isEmpty()){
-                    i = new Intent(PicturesActivity.super.getActivity(), FullImageActivity.class);
+                if (null != images && !images.isEmpty()) {
+                    //Tạo intent gửi đến FullImageActivity
+                    Intent i = new Intent(PicturesActivity.super.getActivity(), FullImageActivity.class);
+                    //Gửi vị trí ảnh hiện tại, tên ảnh và cả mảng file
                     i.putExtra("id", position);
                     i.putExtra("path", images.get(position));
                     i.putExtra("allPath", images);
@@ -53,7 +55,6 @@ public class PicturesActivity extends Fragment{
                 }
             }
         });
-
         return pictures;
     }
 }

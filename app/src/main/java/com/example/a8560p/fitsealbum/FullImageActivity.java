@@ -3,39 +3,33 @@ package com.example.a8560p.fitsealbum;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.WallpaperManager;
 import android.content.ContentResolver;
 import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.Picture;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.support.annotation.Nullable;
-import android.support.media.ExifInterface;
-import android.graphics.Color;
-import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
+import android.support.media.ExifInterface;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.MenuView;
 import android.support.v7.widget.Toolbar;
-
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -45,22 +39,9 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.app.WallpaperManager;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.github.chrisbanes.photoview.PhotoView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -70,57 +51,69 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.google.gson.Gson;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-import com.google.gson.Gson;
-import static android.view.View.VISIBLE;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class FullImageActivity extends AppCompatActivity {
-
+    //Toolbar
     Toolbar toolBar;
+    //ImageView
     ImageView imageView;
-    //PhotoView imageView;
+    //TextView hiển thị ngày chỉnh sửa cuối
     TextView txtDateModified;
+    //Vị trí hiện tại của ảnh trong danh sách file
     int position;
+    //Bottom Navigation View, 4 nút Edit/Crop/Share/Delete
     BottomNavigationView mainNav;
+    //Tọa độ trước và sau khi chạm màn hình
     private float x1, x2, y1, y2;
+    //Khoảng cách tối thiểu được xem như là cử chỉ vuốt
     static final int MIN_DISTANCE = 150;
+    //View
     View decorView;
+    //MyPrefs
     MyPrefs myPrefs;
+    //Thuộc tính ảnh được yêu thích hay không
     static boolean favoritedImage = false;
-
-    /*FirebaseDatabase database = FirebaseDatabase.getInstance();
-    DatabaseReference mData = database.getReference("CloudImage");
-
-    FirebaseStorage storage = FirebaseStorage.getInstance();
-    StorageReference storageRef = storage.getReference("CloudImage");*/
+    //Firebase
+    /*public static FirebaseDatabase database = FirebaseDatabase.getInstance();
+    public static DatabaseReference mData ;
+    public static FirebaseStorage storage = FirebaseStorage.getInstance();
+    public static StorageReference storageRef;*/
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        //Khởi tạo myprefs
         myPrefs = new MyPrefs(this);
         //Màn hình fullscreen
         decorView = getWindow().getDecorView();
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //Set layout chính
         setContentView(R.layout.activity_full_image);
-
-        // setup ActionBar
-        toolBar = (Toolbar) findViewById(R.id.nav_actionBar);
+        //Set ActionBar
+        toolBar = findViewById(R.id.nav_actionBar);
         setSupportActionBar(toolBar);
-
-        getSupportActionBar().setTitle("");
+        Objects.requireNonNull(getSupportActionBar()).setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
+        //Đưa màn hình vào chế dộ Immersive Sticky (ẩn toàn bộ thanh thông báo, thanh điều hướng chỉ hiện lên khi được vuốt lên)
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-
-        mainNav = (BottomNavigationView) findViewById(R.id.nav_bottom);
-        txtDateModified = (TextView) findViewById(R.id.txtDateModified);
+        //Gán mainNav bằng id của nav_bottom
+        mainNav = findViewById(R.id.nav_bottom);
+        //Gán txtDateModified bằng id của txtDateModified
+        txtDateModified = findViewById(R.id.txtDateModified);
         if (PicturesActivity.hideToolbar == 0) {
             //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
             mainNav.setVisibility(View.VISIBLE);
@@ -134,9 +127,8 @@ public class FullImageActivity extends AppCompatActivity {
                     | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         }
 
-        Intent i = getIntent();
-        imageView = (ImageView) findViewById(R.id.imageView);
-        //imageView = (PhotoView) (ImageView) findViewById(R.id.imageView);
+        Intent inte = getIntent();
+        imageView = findViewById(R.id.imageView);
 
         //Navigation bottom onClickListener
         mainNav.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -144,16 +136,13 @@ public class FullImageActivity extends AppCompatActivity {
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
                 switch (menuItem.getItemId()) {
                     case R.id.nav_edit: {
-                        //Toast.makeText(getApplicationContext(), "Edit Image", Toast.LENGTH_SHORT).show();
-                        //imageView.setRotation(imageView.getRotation() + 90);
                         Intent editIntent = new Intent(Intent.ACTION_EDIT);
-                        editIntent.setDataAndType(FileProvider.getUriForFile(getApplicationContext(),"hcmus.mdsd.fitsealbum" , new File(PicturesActivity.images.get(position).toString())), "image/*");
+                        editIntent.setDataAndType(FileProvider.getUriForFile(getApplicationContext(),"hcmus.mdsd.fitsealbum" , new File(PicturesActivity.images.get(position))), "image/*");
                         editIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         startActivity(Intent.createChooser(editIntent, null));
                         return true;
                     }
                     case R.id.nav_crop: {
-                        //Toast.makeText(getApplicationContext(), "Crop Image", Toast.LENGTH_SHORT).show();
                         openCrop();
                         return true;
                     }
@@ -163,8 +152,9 @@ public class FullImageActivity extends AppCompatActivity {
                     }
                     case R.id.nav_delete: {
                         Intent i = getIntent(); // Lấy intent
-                        final String returnUri = i.getExtras().getString("path"); // Lấy đường dẫn trong intent
+                        final String returnUri = Objects.requireNonNull(i.getExtras()).getString("path"); // Lấy đường dẫn trong intent
 
+                        assert returnUri != null;
                         final File photoFile = new File(returnUri);
 
                         // Tạo biến builder để tạo dialog để xác nhận có xoá file hay không
@@ -193,17 +183,19 @@ public class FullImageActivity extends AppCompatActivity {
                                 Uri queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
                                 ContentResolver contentResolver = getContentResolver();
                                 Cursor c = contentResolver.query(queryUri, projection, selection, selectionArgs, null);
-                                if (c.moveToFirst()) {
-                                    // Tìm thấy ID. Xoá ảnh dựa nhờ content provider
-                                    long id = c.getLong(c.getColumnIndexOrThrow(MediaStore.Images.Media._ID));
-                                    Uri deleteUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+                                if (c!=null){
+                                    if (c.moveToFirst()) {
+                                        // Tìm thấy ID. Xoá ảnh dựa nhờ content provider
+                                        long id = c.getLong(c.getColumnIndexOrThrow(MediaStore.Images.Media._ID));
+                                        Uri deleteUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
 
-                                    contentResolver.delete(deleteUri, null, null);
-                                } else {
-                                    // File không có database
+                                        contentResolver.delete(deleteUri, null, null);
+                                    }
+//                                else {
+//                                    // File không có database
+//                                }
+                                    c.close();
                                 }
-                                c.close();
-
                                 Toast.makeText(FullImageActivity.this, "Item has been deleted", Toast.LENGTH_SHORT).show();
                                 dialog.dismiss();
                                 for (int i = position; i < PicturesActivity.images.size() - 1; i++)
@@ -215,6 +207,14 @@ public class FullImageActivity extends AppCompatActivity {
                                 if (favoritedImage)
                                 {
                                     FavoriteActivity.favoriteImages.remove(returnUri);
+                                    SharedPreferences sharedPreferences = PreferenceManager
+                                            .getDefaultSharedPreferences(getApplicationContext());
+                                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                                    Gson gson = new Gson();
+                                    String json = gson.toJson(FavoriteActivity.favoriteImages);
+                                    editor.putString("savedFavoriteImages", json);
+                                    //editor.commit();
+                                    editor.apply();
                                 }
                                 int currentNumberOfPictures = PicturesActivity.images.size();
                                 if (currentNumberOfPictures == 0) {
@@ -251,15 +251,17 @@ public class FullImageActivity extends AppCompatActivity {
             }
         });
 
-        position = i.getExtras().getInt("id");
+        position = Objects.requireNonNull(inte.getExtras()).getInt("id");
         Glide.with(getApplicationContext()).load(PicturesActivity.images.get(position))
                 .apply(new RequestOptions()
                         //.placeholder(R.mipmap.ic_launcher).fitCenter())
                         .placeholder(null).fitCenter())
                 .into(imageView);
 
-        String returnUri = i.getExtras().getString("path"); // Lấy đường dẫn trong intent
+        String returnUri = inte.getExtras().getString("path"); // Lấy đường dẫn trong intent
+        @SuppressLint("SimpleDateFormat")
         SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm"); // Tạo format date để lưu Date
+        assert returnUri != null;
         File file = new File(returnUri);
         txtDateModified.setText(sdf.format(file.lastModified()));
 
@@ -337,24 +339,6 @@ public class FullImageActivity extends AppCompatActivity {
                 return false;
             }
         });
-
-//        imageView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (PicturesActivity.hideToolbar == 0) {
-//                    //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
-//                    mainNav.setVisibility(View.VISIBLE);
-//                    txtDateModified.setVisibility(View.VISIBLE);
-//                    getSupportActionBar().show();
-//                } else {
-//                    getSupportActionBar().hide();
-//                    mainNav.setVisibility(View.GONE);
-//                    txtDateModified.setVisibility(View.GONE);
-//                    decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-//                            | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-//                }
-//            }
-//        });
     }
 
     @Override
@@ -364,7 +348,7 @@ public class FullImageActivity extends AppCompatActivity {
 
         favoritedImage = false;
         Intent i = getIntent();
-        String abc = i.getExtras().getString("path"); // Lấy đường dẫn trong intent
+        String abc = Objects.requireNonNull(i.getExtras()).getString("path"); // Lấy đường dẫn trong intent
         // Nếu tồn tại đường dẫn của ảnh trong favoriteImages
         if (null != FavoriteActivity.favoriteImages && !FavoriteActivity.favoriteImages.isEmpty()) {
             // Nếu ảnh đang chiếu có trong số ảnh được yêu thích thì chuyển tim sang màu đỏ
@@ -384,10 +368,11 @@ public class FullImageActivity extends AppCompatActivity {
     private Intent emailIntent() {
 
         Intent i = getIntent(); // Lấy intent
-        String returnUri = i.getExtras().getString("path"); // Lấy đường dẫn trong intent
+        String returnUri = Objects.requireNonNull(i.getExtras()).getString("path"); // Lấy đường dẫn trong intent
 
         final Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("image/jpg");
+        assert returnUri != null;
         final File photoFile = new File(returnUri);
 
         shareIntent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(FullImageActivity.this, "hcmus.mdsd.fitsealbum", photoFile));
@@ -397,6 +382,7 @@ public class FullImageActivity extends AppCompatActivity {
 
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // user clicked a menu-item from ActionBar
@@ -408,7 +394,7 @@ public class FullImageActivity extends AppCompatActivity {
             if (favoritedImage)
             {
                 MenuView.ItemView favorite_button;
-                favorite_button = (MenuView.ItemView) findViewById(R.id.action_favorite);
+                favorite_button = findViewById(R.id.action_favorite);
                 favorite_button.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.round_favorite_24));
                 FavoriteActivity.favoriteImages.remove(PicturesActivity.images.get(position));
                 favoritedImage = false;
@@ -416,7 +402,7 @@ public class FullImageActivity extends AppCompatActivity {
             else // Nếu ảnh chưa được yêu thích thì khi bấm vào nút Favorite, đổi tim thành màu đỏ và thêm ảnh vào danh sách ảnh được yêu thích
             {
                 MenuView.ItemView favorite_button;
-                favorite_button = (MenuView.ItemView) findViewById(R.id.action_favorite);
+                favorite_button = findViewById(R.id.action_favorite);
                 favorite_button.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.round_favorite_24_clicked));
                 if (null != FavoriteActivity.favoriteImages && !FavoriteActivity.favoriteImages.isEmpty()) {
                     FavoriteActivity.favoriteImages.add(PicturesActivity.images.get(position));
@@ -437,62 +423,71 @@ public class FullImageActivity extends AppCompatActivity {
             Gson gson = new Gson();
             String json = gson.toJson(FavoriteActivity.favoriteImages);
             editor.putString("savedFavoriteImages", json);
-            editor.commit();
+            //editor.commit();
+            editor.apply();
             return true;
-        }
-        else if (id == R.id.action_upload) {
+        } else if (id == R.id.action_upload) {
             /*ConnectivityManager conMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            assert conMgr != null;
             NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
-
-            if (activeNetwork != null && activeNetwork.isConnected()) {
-
-                Intent i = getIntent();
-                String filePath = i.getExtras().getString("path");
-                final String imgName = new File(filePath).getName();
-
-                StorageReference mountainsRef = storageRef.child(imgName);
-
-                imageView.setDrawingCacheEnabled(true);
-                imageView.buildDrawingCache();
-                Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-                byte[] data = baos.toByteArray();
-                UploadTask uploadTask = mountainsRef.putBytes(data);
-                uploadTask.addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        Toast.makeText(FullImageActivity.this, "Lưu ảnh không thành công", Toast.LENGTH_SHORT).show();
-
-                    }
-                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        Toast.makeText(FullImageActivity.this, "Lưu ảnh thành công", Toast.LENGTH_SHORT).show();
-
-                        Task<Uri> urlTask = taskSnapshot.getStorage().getDownloadUrl();
-                        while (!urlTask.isSuccessful());
-                        Uri downloadUrl = urlTask.getResult();
-                        CloudImage con = new CloudImage(imgName, downloadUrl.toString());
-                        mData.push().setValue(con, new DatabaseReference.CompletionListener() {
-                            @Override
-                            public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
-                                if(databaseError==null){
-                                    Toast.makeText(FullImageActivity.this, "Lưu dữ liệu thành công", Toast.LENGTH_SHORT).show();
-                                }
-                                else {
-                                    Toast.makeText(FullImageActivity.this, "Lưu dữ liệu không thành công", Toast.LENGTH_SHORT).show();
-
-                                }
-                            }
-                        });
-                    }
-                });
-            } else {
-                Toast.makeText(FullImageActivity.this, "Kiểm tra kết nối internet của bạn", Toast.LENGTH_SHORT).show();
-
+            if(MainActivity._name_cloud.equals("")){
+                Toast.makeText(FullImageActivity.this, "Login to Cloud Storage to upload images", Toast.LENGTH_SHORT).show();
             }
-            return true;*/
+            else{
+                if (activeNetwork != null && activeNetwork.isConnected()) {
+
+                    storageRef = storage.getReference(MainActivity._name_cloud);
+                    mData = database.getReference(MainActivity._name_cloud);
+
+                    Intent i = getIntent();
+                    String filePath = Objects.requireNonNull(i.getExtras()).getString("path");
+                    assert filePath != null;
+                    final String imgName = new File(filePath).getName();
+
+                    StorageReference mountainsRef = storageRef.child(imgName);
+
+                    imageView.setDrawingCacheEnabled(true);
+                    imageView.buildDrawingCache();
+                    Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                    byte[] data = baos.toByteArray();
+                    UploadTask uploadTask = mountainsRef.putBytes(data);
+                    uploadTask.addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            Toast.makeText(FullImageActivity.this, "Lưu ảnh không thành công", Toast.LENGTH_SHORT).show();
+
+                        }
+                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            Toast.makeText(FullImageActivity.this, "Lưu ảnh thành công", Toast.LENGTH_SHORT).show();
+
+                            Task<Uri> urlTask = taskSnapshot.getStorage().getDownloadUrl();
+                            while (!urlTask.isSuccessful());
+                            Uri downloadUrl = urlTask.getResult();
+                            CloudImage con = new CloudImage(imgName, downloadUrl.toString());
+                            mData.push().setValue(con, new DatabaseReference.CompletionListener() {
+                                @Override
+                                public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
+                                    if(databaseError==null){
+                                        Toast.makeText(FullImageActivity.this, "Lưu dữ liệu thành công", Toast.LENGTH_SHORT).show();
+                                    }
+                                    else {
+                                        Toast.makeText(FullImageActivity.this, "Lưu dữ liệu không thành công", Toast.LENGTH_SHORT).show();
+
+                                    }
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    Toast.makeText(FullImageActivity.this, "Kiểm tra kết nối internet của bạn", Toast.LENGTH_SHORT).show();
+
+                }
+            }*/
+            return true;
         } else if (id == R.id.action_slideshow) {
             // perform SLIDESHOW operations...
             Intent newIntentForSlideShowActivity = new Intent(FullImageActivity.this, SlideShowAcitivity.class);
@@ -519,8 +514,10 @@ public class FullImageActivity extends AppCompatActivity {
         } else if (id == R.id.action_details) {
             // perform INFORMATION operations...
             Intent i = getIntent(); // Lấy intent
-            String returnUri = i.getExtras().getString("path"); // Lấy đường dẫn trong intent
+            String returnUri = Objects.requireNonNull(i.getExtras()).getString("path"); // Lấy đường dẫn trong intent
+            @SuppressLint("SimpleDateFormat")
             SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm"); // Tạo format date để lưu Date
+            assert returnUri != null;
             File file = new File(returnUri);
 
             final DecimalFormat format = new DecimalFormat("#.##"); // Tạo format cho size
@@ -589,6 +586,7 @@ public class FullImageActivity extends AppCompatActivity {
         return false;
     }
 
+    @SuppressLint("DefaultLocale")
     private String ShowExif(ExifInterface exif) {
         String myAttribute = "";
 
@@ -641,7 +639,8 @@ public class FullImageActivity extends AppCompatActivity {
     ///crop
     public void openCrop() {
         Intent i = getIntent();
-        String filePath = i.getExtras().getString("path");
+        String filePath = Objects.requireNonNull(i.getExtras()).getString("path");
+        assert filePath != null;
         Uri photoURI = Uri.fromFile(new File(filePath));
         nameImage = new File(filePath).getName();
         if (photoURI != null) {
@@ -656,6 +655,7 @@ public class FullImageActivity extends AppCompatActivity {
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
+                assert result != null;
                 Uri resultUri = result.getUri();
                 imageView.setImageURI(null);
                 imageView.setImageURI(resultUri);
@@ -696,15 +696,4 @@ public class FullImageActivity extends AppCompatActivity {
         }
     }
 
-    public void openCloudStorageActivity() {
-        //Intent intent = new Intent(this,CloudStorageActivity.class);
-        Intent intent = new Intent(this.getApplicationContext(), CloudStorageActivity.class);
-        startActivity(intent);
-    }
-
-//    private static void scanFile(Context context, Uri imageUri) {
-//        Intent scanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-//        scanIntent.setData(imageUri);
-//        context.sendBroadcast(scanIntent);
-//    }
 }

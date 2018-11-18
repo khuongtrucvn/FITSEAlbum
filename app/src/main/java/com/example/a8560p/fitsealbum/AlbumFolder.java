@@ -9,6 +9,14 @@ public class AlbumFolder implements Parcelable {
     private String name;
     private ArrayList<AlbumFile> mAlbumFiles = new ArrayList<>();
 
+    public ArrayList<String> GetAllFileName() {
+        ArrayList<String> allFileName = new ArrayList<>();
+        for(int i=0;i<mAlbumFiles.size();i++) {
+            allFileName.add(mAlbumFiles.get(i).getPath());
+        }
+        return allFileName;
+    }
+
     public AlbumFile GetNewestFile(){
         return mAlbumFiles.get(0);
     }

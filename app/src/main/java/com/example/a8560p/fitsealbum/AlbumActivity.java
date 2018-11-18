@@ -1,6 +1,7 @@
 package com.example.a8560p.fitsealbum;
 
 import android.app.Fragment;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -38,12 +39,14 @@ public class AlbumActivity extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
                 if (null != AlbumActivity.folderAlbum && !AlbumActivity.folderAlbum.isEmpty()) {
-                    Toast.makeText(getContext(),AlbumActivity.folderAlbum.get(position).getName(), Toast.LENGTH_SHORT).show();
-
+                    Intent i = new Intent(AlbumActivity.super.getActivity(), SubAlbumFolderActivity.class);
+                    i.putExtra("id", position);
+                    i.putExtra("name",AlbumActivity.folderAlbum.get(position).getName());
+                    i.putExtra("allFileName", AlbumActivity.folderAlbum.get(position).GetAllFileName());
+                    startActivity(i);
                 }
             }
         });
-
 
         return album;
     }

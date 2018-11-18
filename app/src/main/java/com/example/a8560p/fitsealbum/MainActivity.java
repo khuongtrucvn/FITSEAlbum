@@ -32,11 +32,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     CloudStorageActivity cloud;
     FavoriteActivity favorite;
 
+    private int codeOfFragment;
+    public static String _name_cloud ="";
+
+    @Override
+    protected void onSaveInstanceState (Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("defaultFragment", codeOfFragment);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         myPrefs = new MyPrefs(this);
 
-        if(myPrefs.loadNightModeState() == true){
+        if(myPrefs.loadNightModeState()){
             setTheme(R.style.NightNoActionBarTheme);
         }
         else{
@@ -48,6 +57,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .getDefaultSharedPreferences(getApplicationContext());
         Gson gson = new Gson();
         String json = sharedPreferences.getString("savedFavoriteImages","");
+
+        SharedPreferences sharedPreferences2 = PreferenceManager
+                .getDefaultSharedPreferences(getApplicationContext());
+        MainActivity._name_cloud = sharedPreferences2.getString("name_cloud","");
+
         Type type = new TypeToken<ArrayList<String>>(){}.getType();
         favoriteImages = gson.fromJson(json, type);
 
@@ -67,12 +81,55 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        ft = getFragmentManager().beginTransaction();
-        pictures = PicturesActivity.newInstance();
-        ft.replace(R.id.content_frame, pictures);
-        ft.commit();
+        if (savedInstanceState!=null)
+        {
+            int id = savedInstanceState.getInt("defaultFragment");
 
-        toolBar.setTitle("Images");
+            switch(id)
+            {
+                case R.id.nav_album: {
+                    toolBar.setTitle("Album");
+                    ft = getFragmentManager().beginTransaction();
+                    album = AlbumActivity.newInstance();
+                    ft.replace(R.id.content_frame, album);
+                    ft.commit();
+                    break;
+                }
+                case R.id.nav_favorite:{
+                    toolBar.setTitle("Favorite");
+                    ft = getFragmentManager().beginTransaction();
+                    favorite = FavoriteActivity.newInstance();
+                    ft.replace(R.id.content_frame, favorite);
+                    ft.commit();
+                    break;
+                }
+                case R.id.nav_cloud:{
+                    toolBar.setTitle("Cloud Storage");
+                    ft = getFragmentManager().beginTransaction();
+                    cloud = CloudStorageActivity.newInstance();
+                    ft.replace(R.id.content_frame, cloud);
+                    ft.commit();
+                    break;
+                }
+                default:{
+                    toolBar.setTitle("Images");
+                    ft = getFragmentManager().beginTransaction();
+                    pictures = PicturesActivity.newInstance();
+                    ft.replace(R.id.content_frame, pictures);
+                    ft.commit();
+                    break;
+                }
+            }
+
+            codeOfFragment = id;
+        }
+        else {
+            ft = getFragmentManager().beginTransaction();
+            pictures = PicturesActivity.newInstance();
+            ft.replace(R.id.content_frame, pictures);
+            ft.commit();
+            toolBar.setTitle("Images");
+        }
     }
 
     @Override
@@ -104,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if (id == R.id.nav_pictures) {
             toolBar.setTitle("Images");
+            codeOfFragment = R.id.nav_pictures;
 
             ft = getFragmentManager().beginTransaction();
             pictures = PicturesActivity.newInstance();
@@ -112,6 +170,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         else if (id == R.id.nav_album) {
             toolBar.setTitle("Album");
+            codeOfFragment = R.id.nav_album;
+
             ft = getFragmentManager().beginTransaction();
             album = AlbumActivity.newInstance();
             ft.replace(R.id.content_frame, album);
@@ -119,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         else if (id == R.id.nav_favorite) {
             toolBar.setTitle("Favorite");
+            codeOfFragment = R.id.nav_favorite;
 
             ft = getFragmentManager().beginTransaction();
             favorite = FavoriteActivity.newInstance();
@@ -127,6 +188,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         else if (id == R.id.nav_cloud) {
             toolBar.setTitle("Cloud Storage");
+            codeOfFragment = R.id.nav_cloud;
+
             ft = getFragmentManager().beginTransaction();
             cloud = CloudStorageActivity.newInstance();
             ft.replace(R.id.content_frame, cloud);
