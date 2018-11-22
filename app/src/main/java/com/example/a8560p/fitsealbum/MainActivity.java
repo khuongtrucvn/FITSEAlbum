@@ -17,6 +17,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Calendar;
+
 import static com.example.a8560p.fitsealbum.FavoriteActivity.favoriteImages;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
@@ -44,13 +46,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         myPrefs = new MyPrefs(this);
+        setNightmode();
 
-        if(myPrefs.loadNightModeState()){
-            setTheme(R.style.NightNoActionBarTheme);
-        }
-        else{
-            setTheme(R.style.DayNoActionBarTheme);
-        }
         super.onCreate(savedInstanceState);
 
         SharedPreferences sharedPreferences = PreferenceManager
@@ -209,5 +206,92 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public boolean CheckTime(int curHour,int curMinute, int hourStart, int minuteStart, int hourEnd, int minuteEnd) {
+        boolean nightmode = true;
+
+        if(hourStart < hourEnd){
+            if(hourStart <= curHour && curHour <= hourEnd){
+                if(hourStart == curHour){
+                    if(minuteStart > curMinute){
+                        nightmode = false;
+                    }
+                }
+                if(hourEnd == curHour){
+                    if(curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+            }
+            else{
+                nightmode = false;
+            }
+        }
+        else if(hourStart == hourEnd){
+            if(hourStart == curHour){
+                if(minuteStart<minuteEnd){
+                    if(minuteStart > curMinute || curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+                else if(minuteStart>minuteEnd){
+                    if(minuteEnd <= curMinute && curMinute <= minuteStart){
+                        nightmode = false;
+                    }
+                }
+            }
+            else{
+                nightmode = false;
+            }
+        }
+        else{
+            if(hourEnd >= curHour || curHour >= hourStart){
+                if(hourStart == curHour){
+                    if(minuteStart > curMinute){
+                        nightmode = false;
+                    }
+                }
+                if(hourEnd == curHour){
+                    if(curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+            }
+        }
+        return nightmode;
+    }
+
+    public void setNightmode(){
+        Calendar c = Calendar.getInstance();
+        int hour, minute;
+
+        if(myPrefs.loadNightModeState() == 0){
+            setTheme(R.style.DayNoActionBarTheme);
+        }
+        else if(myPrefs.loadNightModeState() == 1){
+            setTheme(R.style.NightNoActionBarTheme);
+        }
+        else if(myPrefs.loadNightModeState() == 2) {
+            hour = c.get(Calendar.HOUR_OF_DAY);
+
+            if(6 <= hour && hour <= 17){
+                setTheme(R.style.DayNoActionBarTheme);
+            }
+            else{
+                setTheme(R.style.NightNoActionBarTheme);
+            }
+        }
+        else{
+            hour = c.get(Calendar.HOUR_OF_DAY);
+            minute = c.get(Calendar.MINUTE);
+            boolean nightmode = CheckTime(hour,minute,myPrefs.loadStartHour(),myPrefs.loadStartMinute(),myPrefs.loadEndHour(),myPrefs.loadEndMinute());
+            if(true == nightmode){
+                setTheme(R.style.NightNoActionBarTheme);
+            }
+            else{
+                setTheme(R.style.DayNoActionBarTheme);
+            }
+        }
     }
 }

@@ -10,14 +10,14 @@ public class MyPrefs {
         myPrefs = context.getSharedPreferences("data",Context.MODE_PRIVATE);
     }
 
-    public void setNightModeState(Boolean state){
+    public void setNightModeState(int state){
         SharedPreferences.Editor editor = myPrefs.edit();
-        editor.putBoolean("NightMode",state);
+        editor.putInt("NightMode",state);
         editor.commit();
     }
 
-    public boolean loadNightModeState(){
-        Boolean state = myPrefs.getBoolean("NightMode", false);
+    public int loadNightModeState(){
+        Integer state = myPrefs.getInt("NightMode", 0);
 
         return state;
     }
@@ -45,5 +45,53 @@ public class MyPrefs {
         Integer passMode = myPrefs.getInt("PassMode",0);
 
         return passMode;
+    }
+
+    public void setStartHour(int hour){
+        SharedPreferences.Editor editor = myPrefs.edit();
+        editor.putInt("StartHour",hour);
+        editor.commit();
+    }
+
+    public int loadStartHour(){
+        Integer hour = myPrefs.getInt("StartHour", 0);
+
+        return hour;
+    }
+
+    public void setStartMinute(int minute){
+        SharedPreferences.Editor editor = myPrefs.edit();
+        editor.putInt("StartMinute",minute);
+        editor.commit();
+    }
+
+    public int loadStartMinute(){
+        Integer minute = myPrefs.getInt("StartMinute", 0);
+
+        return minute;
+    }
+
+    public void setEndHour(int hour){
+        SharedPreferences.Editor editor = myPrefs.edit();
+        editor.putInt("EndHour",hour);
+        editor.commit();
+    }
+
+    public int loadEndHour(){
+        Integer hour = myPrefs.getInt("EndHour", 0);
+
+        return hour;
+    }
+
+    public void setEndMinute(int minute){
+        SharedPreferences.Editor editor = myPrefs.edit();
+        editor.putInt("EndMinute",minute);
+        editor.commit();
+    }
+
+    public int loadEndMinute(){
+        Integer minute = myPrefs.getInt("EndMinute", 0);
+
+        return minute;
     }
 }

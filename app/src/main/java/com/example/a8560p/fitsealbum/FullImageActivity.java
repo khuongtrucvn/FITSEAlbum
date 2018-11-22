@@ -61,6 +61,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Objects;
 
 public class FullImageActivity extends AppCompatActivity {
@@ -89,6 +90,7 @@ public class FullImageActivity extends AppCompatActivity {
     public static DatabaseReference mData ;
     public static FirebaseStorage storage = FirebaseStorage.getInstance();
     public static StorageReference storageRef;*/
+    int hour, minute;
 
     @SuppressLint("SimpleDateFormat")
     SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm"); // Tạo format date để lưu Date
@@ -164,10 +166,35 @@ public class FullImageActivity extends AppCompatActivity {
                         // Tạo biến builder để tạo dialog để xác nhận có xoá file hay không
                         AlertDialog builder;
 
-                        if (myPrefs.loadNightModeState()) {
-                            builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
-                        } else {
+                        Calendar c = Calendar.getInstance();
+
+                        if(myPrefs.loadNightModeState() == 0){
                             builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
+                        }
+                        else if(myPrefs.loadNightModeState() == 1){
+                            builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
+                        }
+                        else if(myPrefs.loadNightModeState() == 2) {
+                            hour = c.get(Calendar.HOUR_OF_DAY);
+
+                            if(6 <= hour && hour <= 17){
+                                builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
+                            }
+                            else{
+                                builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
+                            }
+                        }
+                        else{
+                            hour = c.get(Calendar.HOUR_OF_DAY);
+                            minute = c.get(Calendar.MINUTE);
+                            boolean nightmode = CheckTime(hour,minute,myPrefs.loadStartHour(),myPrefs.loadStartMinute(),myPrefs.loadEndHour(),myPrefs.loadEndMinute());
+
+                            if(true == nightmode){
+                                builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
+                            }
+                            else{
+                                builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
+                            }
                         }
 
                         builder.setMessage("Are you sure you want to delete this item ?");
@@ -553,12 +580,41 @@ public class FullImageActivity extends AppCompatActivity {
                 title.setTypeface(null, Typeface.BOLD);
                 AlertDialog dialog;
 
-                if (myPrefs.loadNightModeState()) {
-                    title.setTextColor(Color.WHITE);
-                    dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
-                } else {
+                Calendar c = Calendar.getInstance();
+
+                if(myPrefs.loadNightModeState() == 0){
                     title.setTextColor(Color.BLACK);
                     dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
+                }
+                else if(myPrefs.loadNightModeState() == 1){
+                    title.setTextColor(Color.WHITE);
+                    dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
+                }
+                else if(myPrefs.loadNightModeState() == 2) {
+                    hour = c.get(Calendar.HOUR_OF_DAY);
+
+                    if(6 <= hour && hour <= 17){
+                        title.setTextColor(Color.BLACK);
+                        dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
+                    }
+                    else{
+                        title.setTextColor(Color.WHITE);
+                        dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
+                    }
+                }
+                else{
+                    hour = c.get(Calendar.HOUR_OF_DAY);
+                    minute = c.get(Calendar.MINUTE);
+                    boolean nightmode = CheckTime(hour,minute,myPrefs.loadStartHour(),myPrefs.loadStartMinute(),myPrefs.loadEndHour(),myPrefs.loadEndMinute());
+
+                    if(true == nightmode){
+                        title.setTextColor(Color.WHITE);
+                        dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
+                    }
+                    else{
+                        title.setTextColor(Color.BLACK);
+                        dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
+                    }
                 }
 
                 dialog.setCustomTitle(title);
@@ -686,5 +742,59 @@ public class FullImageActivity extends AppCompatActivity {
             }
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    public boolean CheckTime(int curHour,int curMinute, int hourStart, int minuteStart, int hourEnd, int minuteEnd) {
+        boolean nightmode = true;
+
+        if(hourStart < hourEnd){
+            if(hourStart <= curHour && curHour <= hourEnd){
+                if(hourStart == curHour){
+                    if(minuteStart > curMinute){
+                        nightmode = false;
+                    }
+                }
+                if(hourEnd == curHour){
+                    if(curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+            }
+            else{
+                nightmode = false;
+            }
+        }
+        else if(hourStart == hourEnd){
+            if(hourStart == curHour){
+                if(minuteStart<minuteEnd){
+                    if(minuteStart > curMinute || curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+                else if(minuteStart>minuteEnd){
+                    if(minuteEnd <= curMinute && curMinute <= minuteStart){
+                        nightmode = false;
+                    }
+                }
+            }
+            else{
+                nightmode = false;
+            }
+        }
+        else{
+            if(hourEnd >= curHour || curHour >= hourStart){
+                if(hourStart == curHour){
+                    if(minuteStart > curMinute){
+                        nightmode = false;
+                    }
+                }
+                if(hourEnd == curHour){
+                    if(curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+            }
+        }
+        return nightmode;
     }
 }

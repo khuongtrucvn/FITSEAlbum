@@ -11,6 +11,7 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Objects;
 
 
@@ -24,11 +25,8 @@ public class SubAlbumFolderActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         //Đặt lại nền tùy thuộc cài đặt sáng hay tối
         myPrefs = new MyPrefs(this);
-        if(myPrefs.loadNightModeState()){
-            setTheme(R.style.NightAppTheme);
-        } else {
-            setTheme(R.style.DayAppTheme);
-        }
+        setNightmode();
+
         super.onCreate(savedInstanceState);
         //View mặc định là activity_pictures
         setContentView(R.layout.activity_pictures);
@@ -80,5 +78,92 @@ public class SubAlbumFolderActivity extends AppCompatActivity{
             return true;
         }
         return false;
+    }
+
+    public boolean CheckTime(int curHour,int curMinute, int hourStart, int minuteStart, int hourEnd, int minuteEnd) {
+        boolean nightmode = true;
+
+        if(hourStart < hourEnd){
+            if(hourStart <= curHour && curHour <= hourEnd){
+                if(hourStart == curHour){
+                    if(minuteStart > curMinute){
+                        nightmode = false;
+                    }
+                }
+                if(hourEnd == curHour){
+                    if(curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+            }
+            else{
+                nightmode = false;
+            }
+        }
+        else if(hourStart == hourEnd){
+            if(hourStart == curHour){
+                if(minuteStart<minuteEnd){
+                    if(minuteStart > curMinute || curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+                else if(minuteStart>minuteEnd){
+                    if(minuteEnd <= curMinute && curMinute <= minuteStart){
+                        nightmode = false;
+                    }
+                }
+            }
+            else{
+                nightmode = false;
+            }
+        }
+        else{
+            if(hourEnd >= curHour || curHour >= hourStart){
+                if(hourStart == curHour){
+                    if(minuteStart > curMinute){
+                        nightmode = false;
+                    }
+                }
+                if(hourEnd == curHour){
+                    if(curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+            }
+        }
+        return nightmode;
+    }
+
+    public void setNightmode(){
+        Calendar c = Calendar.getInstance();
+        int hour, minute;
+
+        if(myPrefs.loadNightModeState() == 0){
+            setTheme(R.style.DayAppTheme);
+        }
+        else if(myPrefs.loadNightModeState() == 1){
+            setTheme(R.style.NightAppTheme);
+        }
+        else if(myPrefs.loadNightModeState() == 2) {
+            hour = c.get(Calendar.HOUR_OF_DAY);
+
+            if(6 <= hour && hour <= 17){
+                setTheme(R.style.DayAppTheme);
+            }
+            else{
+                setTheme(R.style.NightAppTheme);
+            }
+        }
+        else{
+            hour = c.get(Calendar.HOUR_OF_DAY);
+            minute = c.get(Calendar.MINUTE);
+            boolean nightmode = CheckTime(hour,minute,myPrefs.loadStartHour(),myPrefs.loadStartMinute(),myPrefs.loadEndHour(),myPrefs.loadEndMinute());
+            if(true == nightmode){
+                setTheme(R.style.NightAppTheme);
+            }
+            else{
+                setTheme(R.style.DayAppTheme);
+            }
+        }
     }
 }

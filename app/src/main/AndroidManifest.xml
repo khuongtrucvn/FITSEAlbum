@@ -50,6 +50,8 @@
         <activity android:name=".CreateCloudActivity" />
         <activity android:name=".LoginCloudActivity" />
         <activity android:name=".LogoutCloudActivity"/>
+        <activity android:name=".NightmodeActivity"/>
+
 
         <provider
             android:name="android.support.v4.content.FileProvider"

@@ -8,6 +8,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.util.Calendar;
+
 public class SetPasswordActivity extends AppCompatActivity{
     MyPrefs myPrefs;
     Button btnConfirm, btnCancel;
@@ -17,13 +19,7 @@ public class SetPasswordActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         myPrefs = new MyPrefs(this);
-
-        if(myPrefs.loadNightModeState() == true){
-            setTheme(R.style.NightNoActionBarTheme);
-        }
-        else{
-            setTheme(R.style.DayNoActionBarTheme);
-        }
+        setNightmode();
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_password);
@@ -93,5 +89,92 @@ public class SetPasswordActivity extends AppCompatActivity{
             return true;
         }
         return false;
+    }
+
+    public boolean CheckTime(int curHour,int curMinute, int hourStart, int minuteStart, int hourEnd, int minuteEnd) {
+        boolean nightmode = true;
+
+        if(hourStart < hourEnd){
+            if(hourStart <= curHour && curHour <= hourEnd){
+                if(hourStart == curHour){
+                    if(minuteStart > curMinute){
+                        nightmode = false;
+                    }
+                }
+                if(hourEnd == curHour){
+                    if(curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+            }
+            else{
+                nightmode = false;
+            }
+        }
+        else if(hourStart == hourEnd){
+            if(hourStart == curHour){
+                if(minuteStart<minuteEnd){
+                    if(minuteStart > curMinute || curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+                else if(minuteStart>minuteEnd){
+                    if(minuteEnd <= curMinute && curMinute <= minuteStart){
+                        nightmode = false;
+                    }
+                }
+            }
+            else{
+                nightmode = false;
+            }
+        }
+        else{
+            if(hourEnd >= curHour || curHour >= hourStart){
+                if(hourStart == curHour){
+                    if(minuteStart > curMinute){
+                        nightmode = false;
+                    }
+                }
+                if(hourEnd == curHour){
+                    if(curMinute > minuteEnd){
+                        nightmode = false;
+                    }
+                }
+            }
+        }
+        return nightmode;
+    }
+
+    public void setNightmode(){
+        Calendar c = Calendar.getInstance();
+        int hour, minute;
+
+        if(myPrefs.loadNightModeState() == 0){
+            setTheme(R.style.DayNoActionBarTheme);
+        }
+        else if(myPrefs.loadNightModeState() == 1){
+            setTheme(R.style.NightNoActionBarTheme);
+        }
+        else if(myPrefs.loadNightModeState() == 2) {
+            hour = c.get(Calendar.HOUR_OF_DAY);
+
+            if(6 <= hour && hour <= 17){
+                setTheme(R.style.DayNoActionBarTheme);
+            }
+            else{
+                setTheme(R.style.NightNoActionBarTheme);
+            }
+        }
+        else{
+            hour = c.get(Calendar.HOUR_OF_DAY);
+            minute = c.get(Calendar.MINUTE);
+            boolean nightmode = CheckTime(hour,minute,myPrefs.loadStartHour(),myPrefs.loadStartMinute(),myPrefs.loadEndHour(),myPrefs.loadEndMinute());
+            if(true == nightmode){
+                setTheme(R.style.NightNoActionBarTheme);
+            }
+            else{
+                setTheme(R.style.DayNoActionBarTheme);
+            }
+        }
     }
 }
