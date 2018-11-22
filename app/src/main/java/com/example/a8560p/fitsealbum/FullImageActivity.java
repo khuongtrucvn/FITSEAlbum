@@ -77,7 +77,7 @@ public class FullImageActivity extends AppCompatActivity {
     //Tọa độ trước và sau khi chạm màn hình
     private float x1, x2, y1, y2;
     //Khoảng cách tối thiểu được xem như là cử chỉ vuốt
-    static final int MIN_DISTANCE = 150;
+    int MIN_DISTANCE = 150;
     //View
     View decorView;
     //MyPrefs
@@ -90,6 +90,8 @@ public class FullImageActivity extends AppCompatActivity {
     public static FirebaseStorage storage = FirebaseStorage.getInstance();
     public static StorageReference storageRef;*/
 
+    @SuppressLint("SimpleDateFormat")
+    SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm"); // Tạo format date để lưu Date
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,12 +116,14 @@ public class FullImageActivity extends AppCompatActivity {
         mainNav = findViewById(R.id.nav_bottom);
         //Gán txtDateModified bằng id của txtDateModified
         txtDateModified = findViewById(R.id.txtDateModified);
+
         if (PicturesActivity.hideToolbar == 0) {
             //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
             mainNav.setVisibility(View.VISIBLE);
             txtDateModified.setVisibility(View.VISIBLE);
             getSupportActionBar().show();
-        } else {
+        }
+        else {
             getSupportActionBar().hide();
             mainNav.setVisibility(View.GONE);
             txtDateModified.setVisibility(View.GONE);
@@ -127,7 +131,7 @@ public class FullImageActivity extends AppCompatActivity {
                     | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         }
 
-        Intent inte = getIntent();
+        Intent intentGet = getIntent();
         imageView = findViewById(R.id.imageView);
 
         //Navigation bottom onClickListener
@@ -172,17 +176,12 @@ public class FullImageActivity extends AppCompatActivity {
                                 //---- Dưới đây là bài hướng dẫn xoá ảnh sử dụng ContentResolver trên diễn đàn stackoverflow ----
                                 // Nguồn: http://stackoverflow.com/a/20780472#1#L0
 
-                                // Khởi tạo ID
-                                String[] projection = {MediaStore.Images.Media._ID};
-
                                 // Lấy thông tin đường dẫn
                                 String selection = MediaStore.Images.Media.DATA + " = ?";
                                 String[] selectionArgs = new String[]{photoFile.getAbsolutePath()};
 
-                                //
-                                Uri queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
                                 ContentResolver contentResolver = getContentResolver();
-                                Cursor c = contentResolver.query(queryUri, projection, selection, selectionArgs, null);
+                                Cursor c = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new String[]{MediaStore.Images.Media._ID}, selection, selectionArgs, null);
                                 if (c!=null){
                                     if (c.moveToFirst()) {
                                         // Tìm thấy ID. Xoá ảnh dựa nhờ content provider
@@ -198,11 +197,12 @@ public class FullImageActivity extends AppCompatActivity {
                                 }
                                 Toast.makeText(FullImageActivity.this, "Item has been deleted", Toast.LENGTH_SHORT).show();
                                 dialog.dismiss();
-                                for (int i = position; i < PicturesActivity.images.size() - 1; i++)
+                                PicturesActivity.images.remove(position);
+                                /*for (int i = position; i < PicturesActivity.images.size() - 1; i++)
                                 {
                                     PicturesActivity.images.set(i, PicturesActivity.images.get(i + 1));
                                 }
-                                PicturesActivity.images.remove(PicturesActivity.images.size() - 1);
+                                PicturesActivity.images.remove(PicturesActivity.images.size() - 1);*/
                                 // Nếu ảnh được yêu thích thì khi xoá ảnh phải xoá trong danh sách các ảnh được yêu thích luôn
                                 if (favoritedImage)
                                 {
@@ -251,16 +251,12 @@ public class FullImageActivity extends AppCompatActivity {
             }
         });
 
-        position = Objects.requireNonNull(inte.getExtras()).getInt("id");
+        position = Objects.requireNonNull(intentGet.getExtras()).getInt("id");
         Glide.with(getApplicationContext()).load(PicturesActivity.images.get(position))
-                .apply(new RequestOptions()
-                        //.placeholder(R.mipmap.ic_launcher).fitCenter())
-                        .placeholder(null).fitCenter())
+                .apply(new RequestOptions().placeholder(null).fitCenter())
                 .into(imageView);
 
-        String returnUri = inte.getExtras().getString("path"); // Lấy đường dẫn trong intent
-        @SuppressLint("SimpleDateFormat")
-        SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm"); // Tạo format date để lưu Date
+        String returnUri = intentGet.getExtras().getString("path"); // Lấy đường dẫn trong intent
         assert returnUri != null;
         File file = new File(returnUri);
         txtDateModified.setText(sdf.format(file.lastModified()));
@@ -272,9 +268,11 @@ public class FullImageActivity extends AppCompatActivity {
                     case MotionEvent.ACTION_DOWN: {
                         x1 = event.getX();
                         y1 = event.getY();
+                        imageView.setAlpha((float)0.75);
                         break;
                     }
                     case MotionEvent.ACTION_UP: {
+                        imageView.setAlpha((float)1.0);
                         x2 = event.getX();
                         y2 = event.getY();
                         float deltaX = x2 - x1;
@@ -363,7 +361,6 @@ public class FullImageActivity extends AppCompatActivity {
         return true;
     }
 
-
     // return a SHARED intent to deliver an email
     private Intent emailIntent() {
 
@@ -390,9 +387,9 @@ public class FullImageActivity extends AppCompatActivity {
         int id = item.getItemId();
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+
         if (id == R.id.action_favorite) {
-            if (favoritedImage)
-            {
+            if (favoritedImage){
                 MenuView.ItemView favorite_button;
                 favorite_button = findViewById(R.id.action_favorite);
                 favorite_button.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.round_favorite_24));
@@ -407,8 +404,7 @@ public class FullImageActivity extends AppCompatActivity {
                 if (null != FavoriteActivity.favoriteImages && !FavoriteActivity.favoriteImages.isEmpty()) {
                     FavoriteActivity.favoriteImages.add(PicturesActivity.images.get(position));
                 }
-                else
-                {
+                else {
                     FavoriteActivity.favoriteImages = new ArrayList<>();
                     FavoriteActivity.favoriteImages.add(PicturesActivity.images.get(position));
                 }
@@ -426,7 +422,8 @@ public class FullImageActivity extends AppCompatActivity {
             //editor.commit();
             editor.apply();
             return true;
-        } else if (id == R.id.action_upload) {
+        }
+        else if (id == R.id.action_upload) {
             /*ConnectivityManager conMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
             assert conMgr != null;
             NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
@@ -488,15 +485,18 @@ public class FullImageActivity extends AppCompatActivity {
                 }
             }*/
             return true;
-        } else if (id == R.id.action_slideshow) {
+        }
+        else if (id == R.id.action_slideshow) {
             // perform SLIDESHOW operations...
             Intent newIntentForSlideShowActivity = new Intent(FullImageActivity.this, SlideShowAcitivity.class);
             newIntentForSlideShowActivity.putExtra("id", position); // Lấy position id và truyền cho SlideShowActivity
             startActivity(newIntentForSlideShowActivity);
             return true;
-        } else if (id == R.id.action_rotate) {
+        }
+        else if (id == R.id.action_rotate) {
             imageView.setRotation(imageView.getRotation() + 90);
-        } else if (id == R.id.action_setBackground) {
+        }
+        else if (id == R.id.action_setBackground) {
             // perform SETBACKGROUND operations...
             WallpaperManager myWallpaperManager = WallpaperManager.getInstance(getApplicationContext());
             try {
@@ -508,15 +508,15 @@ public class FullImageActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             return true;
-        } else if (id == R.id.action_print) {
+        }
+        else if (id == R.id.action_print) {
             // perform PRINT operations...
             return true;
-        } else if (id == R.id.action_details) {
+        }
+        else if (id == R.id.action_details) {
             // perform INFORMATION operations...
             Intent i = getIntent(); // Lấy intent
             String returnUri = Objects.requireNonNull(i.getExtras()).getString("path"); // Lấy đường dẫn trong intent
-            @SuppressLint("SimpleDateFormat")
-            SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm"); // Tạo format date để lưu Date
             assert returnUri != null;
             File file = new File(returnUri);
 
@@ -555,11 +555,9 @@ public class FullImageActivity extends AppCompatActivity {
 
                 if (myPrefs.loadNightModeState()) {
                     title.setTextColor(Color.WHITE);
-                    //dialog = new AlertDialog.Builder(FullImageActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_DARK).create();
                     dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
                 } else {
                     title.setTextColor(Color.BLACK);
-                    //dialog = new AlertDialog.Builder(FullImageActivity.this, AlertDialog.THEME_DEVICE_DEFAULT_LIGHT).create();
                     dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
                 }
 
@@ -579,7 +577,8 @@ public class FullImageActivity extends AppCompatActivity {
             }
 
             return true;
-        } else if (id == android.R.id.home) {
+        }
+        else if (id == android.R.id.home) {
             finish();
             return true;
         }
@@ -664,11 +663,6 @@ public class FullImageActivity extends AppCompatActivity {
                 MediaStore.Images.Media.insertImage(getContentResolver(), b, nameImage + "_crop", "");
 //                File storageLoc = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES); //context.getExternalFilesDir(null);
 //
-//                //SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm");
-//
-//
-//
-//
 //                File file = new File(storageLoc, "tan" );
 //                try{
 //                    FileOutputStream fos = new FileOutputStream(file);
@@ -683,9 +677,7 @@ public class FullImageActivity extends AppCompatActivity {
 
                 PicturesActivity.images.add(nameImage + "_crop");
                 Glide.with(getApplicationContext()).load(PicturesActivity.images.get(0))
-                        .apply(new RequestOptions()
-                                //.placeholder(R.mipmap.ic_launcher).fitCenter())
-                                .placeholder(null).fitCenter())
+                        .apply(new RequestOptions().placeholder(null).fitCenter())
                         .into(imageView);
 
                 // cái đó là gì v load cái ảnh mới cắt vào glide trong giao diện đó ok
@@ -695,5 +687,4 @@ public class FullImageActivity extends AppCompatActivity {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
-
 }

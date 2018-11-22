@@ -49,13 +49,12 @@ public class ImageAdapter extends BaseAdapter {
         ImageView picturesView;
         if (convertView == null) {
             //Đoạn code kiểm tra tình trạng màn hình để hiển thị số cột ảnh
-            //Nếu màn hình portrait thì hiển thị 4 cột, nếu màn hình landscape hiển thị 6 cột
-            int column = 4;
+
+            //Nếu màn hình portrait thì hiển thị 4 cột (mặc định trong layout xml), nếu màn hình landscape hiển thị 6 cột
+            GridView gridView = context.findViewById(R.id.galleryGridView);
+            int column = gridView.getNumColumns();
             int screenWidth =  Resources.getSystem().getDisplayMetrics().widthPixels;
-            int screenHeight =  Resources.getSystem().getDisplayMetrics().heightPixels;
-            if (screenWidth > screenHeight) {
-                column = 6;
-            }
+
             //Kích thước ảnh hiển thị
             int sizeOfImage = (screenWidth - (column + 1) * 8) / column;
             //Khởi tạo picturesView
