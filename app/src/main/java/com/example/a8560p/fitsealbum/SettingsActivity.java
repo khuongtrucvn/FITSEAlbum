@@ -30,6 +30,7 @@ public class SettingsActivity extends AppCompatActivity{
 
         actionBar = getSupportActionBar();
 
+        assert actionBar != null;
         actionBar.setTitle("Settings");
 
         actionBar.setDisplayShowCustomEnabled(true);

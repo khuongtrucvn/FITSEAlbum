@@ -41,6 +41,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.request.RequestOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -90,6 +91,7 @@ public class FullImageActivity extends AppCompatActivity {
     public static DatabaseReference mData ;
     public static FirebaseStorage storage = FirebaseStorage.getInstance();
     public static StorageReference storageRef;*/
+
     int hour, minute;
 
     @SuppressLint("SimpleDateFormat")
@@ -118,19 +120,10 @@ public class FullImageActivity extends AppCompatActivity {
         mainNav = findViewById(R.id.nav_bottom);
         //Gán txtDateModified bằng id của txtDateModified
         txtDateModified = findViewById(R.id.txtDateModified);
-
         if (PicturesActivity.hideToolbar == 0) {
-            //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
-            mainNav.setVisibility(View.VISIBLE);
-            txtDateModified.setVisibility(View.VISIBLE);
-            getSupportActionBar().show();
-        }
-        else {
-            getSupportActionBar().hide();
-            mainNav.setVisibility(View.GONE);
-            txtDateModified.setVisibility(View.GONE);
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+            LeaveFullScreenView();
+        } else {
+            EnterFullScreenView();
         }
 
         Intent intentGet = getIntent();
@@ -143,7 +136,8 @@ public class FullImageActivity extends AppCompatActivity {
                 switch (menuItem.getItemId()) {
                     case R.id.nav_edit: {
                         Intent editIntent = new Intent(Intent.ACTION_EDIT);
-                        editIntent.setDataAndType(FileProvider.getUriForFile(getApplicationContext(),"hcmus.mdsd.fitsealbum" , new File(PicturesActivity.images.get(position))), "image/*");
+                        editIntent.setDataAndType(FileProvider.getUriForFile(getApplicationContext(),
+                                "hcmus.mdsd.fitsealbum" , new File(PicturesActivity.images.get(position))), "image/*");
                         editIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         startActivity(Intent.createChooser(editIntent, null));
                         return true;
@@ -158,8 +152,8 @@ public class FullImageActivity extends AppCompatActivity {
                     }
                     case R.id.nav_delete: {
                         Intent i = getIntent(); // Lấy intent
-                        final String returnUri = Objects.requireNonNull(i.getExtras()).getString("path"); // Lấy đường dẫn trong intent
-
+                        // Lấy đường dẫn trong intent
+                        final String returnUri = Objects.requireNonNull(i.getExtras()).getString("path");
                         assert returnUri != null;
                         final File photoFile = new File(returnUri);
 
@@ -167,7 +161,6 @@ public class FullImageActivity extends AppCompatActivity {
                         AlertDialog builder;
 
                         Calendar c = Calendar.getInstance();
-
                         if(myPrefs.loadNightModeState() == 0){
                             builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
                         }
@@ -176,7 +169,6 @@ public class FullImageActivity extends AppCompatActivity {
                         }
                         else if(myPrefs.loadNightModeState() == 2) {
                             hour = c.get(Calendar.HOUR_OF_DAY);
-
                             if(6 <= hour && hour <= 17){
                                 builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
                             }
@@ -188,8 +180,7 @@ public class FullImageActivity extends AppCompatActivity {
                             hour = c.get(Calendar.HOUR_OF_DAY);
                             minute = c.get(Calendar.MINUTE);
                             boolean nightmode = CheckTime(hour,minute,myPrefs.loadStartHour(),myPrefs.loadStartMinute(),myPrefs.loadEndHour(),myPrefs.loadEndMinute());
-
-                            if(true == nightmode){
+                            if(nightmode){
                                 builder = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
                             }
                             else{
@@ -208,7 +199,8 @@ public class FullImageActivity extends AppCompatActivity {
                                 String[] selectionArgs = new String[]{photoFile.getAbsolutePath()};
 
                                 ContentResolver contentResolver = getContentResolver();
-                                Cursor c = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new String[]{MediaStore.Images.Media._ID}, selection, selectionArgs, null);
+                                Cursor c = contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                        new String[]{MediaStore.Images.Media._ID}, selection, selectionArgs, null);
                                 if (c!=null){
                                     if (c.moveToFirst()) {
                                         // Tìm thấy ID. Xoá ảnh dựa nhờ content provider
@@ -225,11 +217,7 @@ public class FullImageActivity extends AppCompatActivity {
                                 Toast.makeText(FullImageActivity.this, "Item has been deleted", Toast.LENGTH_SHORT).show();
                                 dialog.dismiss();
                                 PicturesActivity.images.remove(position);
-                                /*for (int i = position; i < PicturesActivity.images.size() - 1; i++)
-                                {
-                                    PicturesActivity.images.set(i, PicturesActivity.images.get(i + 1));
-                                }
-                                PicturesActivity.images.remove(PicturesActivity.images.size() - 1);*/
+
                                 // Nếu ảnh được yêu thích thì khi xoá ảnh phải xoá trong danh sách các ảnh được yêu thích luôn
                                 if (favoritedImage)
                                 {
@@ -240,7 +228,6 @@ public class FullImageActivity extends AppCompatActivity {
                                     Gson gson = new Gson();
                                     String json = gson.toJson(FavoriteActivity.favoriteImages);
                                     editor.putString("savedFavoriteImages", json);
-                                    //editor.commit();
                                     editor.apply();
                                 }
                                 int currentNumberOfPictures = PicturesActivity.images.size();
@@ -280,8 +267,10 @@ public class FullImageActivity extends AppCompatActivity {
 
         position = Objects.requireNonNull(intentGet.getExtras()).getInt("id");
         Glide.with(getApplicationContext()).load(PicturesActivity.images.get(position))
+                .transition(new DrawableTransitionOptions().crossFade())
                 .apply(new RequestOptions().placeholder(null).fitCenter())
                 .into(imageView);
+
 
         String returnUri = intentGet.getExtras().getString("path"); // Lấy đường dẫn trong intent
         assert returnUri != null;
@@ -295,11 +284,11 @@ public class FullImageActivity extends AppCompatActivity {
                     case MotionEvent.ACTION_DOWN: {
                         x1 = event.getX();
                         y1 = event.getY();
-                        imageView.setAlpha((float)0.75);
+                        //imageView.setAlpha((float)0.75);
                         break;
                     }
                     case MotionEvent.ACTION_UP: {
-                        imageView.setAlpha((float)1.0);
+                        //imageView.setAlpha((float)1.0);
                         x2 = event.getX();
                         y2 = event.getY();
                         float deltaX = x2 - x1;
@@ -334,36 +323,31 @@ public class FullImageActivity extends AppCompatActivity {
                             // consider as something else - a screen tap for example
                             PicturesActivity.hideToolbar = (PicturesActivity.hideToolbar + 1) % 2;
                             if (PicturesActivity.hideToolbar == 1) {
-                                getSupportActionBar().hide();
-                                mainNav.setVisibility(View.GONE);
-                                txtDateModified.setVisibility(View.GONE);
-                                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                                        | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                                EnterFullScreenView();
                             } else {
-                                //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
-                                mainNav.setVisibility(View.VISIBLE);
-                                txtDateModified.setVisibility(View.VISIBLE);
-                                getSupportActionBar().show();
+                                LeaveFullScreenView();
                             }
                         }
                         break;
                     }
                 }
-                if (PicturesActivity.hideToolbar == 0) {
-                    //decorView.setSystemUiVisibility(View.SYSTEM_UI_LAYOUT_FLAGS);
-                    mainNav.setVisibility(View.VISIBLE);
-                    txtDateModified.setVisibility(View.VISIBLE);
-                    getSupportActionBar().show();
-                } else {
-                    getSupportActionBar().hide();
-                    mainNav.setVisibility(View.GONE);
-                    txtDateModified.setVisibility(View.GONE);
-                    decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-                }
                 return false;
             }
         });
+    }
+
+    public void EnterFullScreenView() {
+        Objects.requireNonNull(getSupportActionBar()).hide();
+        mainNav.setVisibility(View.GONE);
+        txtDateModified.setVisibility(View.GONE);
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
+
+    public void LeaveFullScreenView(){
+        mainNav.setVisibility(View.VISIBLE);
+        txtDateModified.setVisibility(View.VISIBLE);
+        Objects.requireNonNull(getSupportActionBar()).show();
     }
 
     @Override
@@ -414,9 +398,9 @@ public class FullImageActivity extends AppCompatActivity {
         int id = item.getItemId();
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-
         if (id == R.id.action_favorite) {
-            if (favoritedImage){
+            if (favoritedImage)
+            {
                 MenuView.ItemView favorite_button;
                 favorite_button = findViewById(R.id.action_favorite);
                 favorite_button.setIcon(ContextCompat.getDrawable(getApplicationContext(), R.drawable.round_favorite_24));
@@ -431,7 +415,8 @@ public class FullImageActivity extends AppCompatActivity {
                 if (null != FavoriteActivity.favoriteImages && !FavoriteActivity.favoriteImages.isEmpty()) {
                     FavoriteActivity.favoriteImages.add(PicturesActivity.images.get(position));
                 }
-                else {
+                else
+                {
                     FavoriteActivity.favoriteImages = new ArrayList<>();
                     FavoriteActivity.favoriteImages.add(PicturesActivity.images.get(position));
                 }
@@ -449,8 +434,7 @@ public class FullImageActivity extends AppCompatActivity {
             //editor.commit();
             editor.apply();
             return true;
-        }
-        else if (id == R.id.action_upload) {
+        } else if (id == R.id.action_upload) {
             /*ConnectivityManager conMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
             assert conMgr != null;
             NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
@@ -497,10 +481,8 @@ public class FullImageActivity extends AppCompatActivity {
                                 public void onComplete(@Nullable DatabaseError databaseError, @NonNull DatabaseReference databaseReference) {
                                     if(databaseError==null){
                                         Toast.makeText(FullImageActivity.this, "Lưu dữ liệu thành công", Toast.LENGTH_SHORT).show();
-                                    }
-                                    else {
+                                    } else {
                                         Toast.makeText(FullImageActivity.this, "Lưu dữ liệu không thành công", Toast.LENGTH_SHORT).show();
-
                                     }
                                 }
                             });
@@ -508,22 +490,19 @@ public class FullImageActivity extends AppCompatActivity {
                     });
                 } else {
                     Toast.makeText(FullImageActivity.this, "Kiểm tra kết nối internet của bạn", Toast.LENGTH_SHORT).show();
-
                 }
             }*/
+
             return true;
-        }
-        else if (id == R.id.action_slideshow) {
+        } else if (id == R.id.action_slideshow) {
             // perform SLIDESHOW operations...
             Intent newIntentForSlideShowActivity = new Intent(FullImageActivity.this, SlideShowAcitivity.class);
             newIntentForSlideShowActivity.putExtra("id", position); // Lấy position id và truyền cho SlideShowActivity
             startActivity(newIntentForSlideShowActivity);
             return true;
-        }
-        else if (id == R.id.action_rotate) {
+        } else if (id == R.id.action_rotate) {
             imageView.setRotation(imageView.getRotation() + 90);
-        }
-        else if (id == R.id.action_setBackground) {
+        } else if (id == R.id.action_setBackground) {
             // perform SETBACKGROUND operations...
             WallpaperManager myWallpaperManager = WallpaperManager.getInstance(getApplicationContext());
             try {
@@ -535,12 +514,10 @@ public class FullImageActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             return true;
-        }
-        else if (id == R.id.action_print) {
+        } else if (id == R.id.action_print) {
             // perform PRINT operations...
             return true;
-        }
-        else if (id == R.id.action_details) {
+        } else if (id == R.id.action_details) {
             // perform INFORMATION operations...
             Intent i = getIntent(); // Lấy intent
             String returnUri = Objects.requireNonNull(i.getExtras()).getString("path"); // Lấy đường dẫn trong intent
@@ -581,7 +558,6 @@ public class FullImageActivity extends AppCompatActivity {
                 AlertDialog dialog;
 
                 Calendar c = Calendar.getInstance();
-
                 if(myPrefs.loadNightModeState() == 0){
                     title.setTextColor(Color.BLACK);
                     dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
@@ -592,7 +568,6 @@ public class FullImageActivity extends AppCompatActivity {
                 }
                 else if(myPrefs.loadNightModeState() == 2) {
                     hour = c.get(Calendar.HOUR_OF_DAY);
-
                     if(6 <= hour && hour <= 17){
                         title.setTextColor(Color.BLACK);
                         dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert).create();
@@ -606,8 +581,7 @@ public class FullImageActivity extends AppCompatActivity {
                     hour = c.get(Calendar.HOUR_OF_DAY);
                     minute = c.get(Calendar.MINUTE);
                     boolean nightmode = CheckTime(hour,minute,myPrefs.loadStartHour(),myPrefs.loadStartMinute(),myPrefs.loadEndHour(),myPrefs.loadEndMinute());
-
-                    if(true == nightmode){
+                    if(nightmode){
                         title.setTextColor(Color.WHITE);
                         dialog = new AlertDialog.Builder(FullImageActivity.this, android.R.style.Theme_DeviceDefault_Dialog_Alert).create();
                     }
@@ -633,8 +607,7 @@ public class FullImageActivity extends AppCompatActivity {
             }
 
             return true;
-        }
-        else if (id == android.R.id.home) {
+        } else if (id == android.R.id.home) {
             finish();
             return true;
         }
@@ -681,7 +654,6 @@ public class FullImageActivity extends AppCompatActivity {
         } else {
             myAttribute += "Flash: On\n\n";
         }
-
         myAttribute += "Focal Length: " + exif.getAttributeDouble(ExifInterface.TAG_FOCAL_LENGTH, 0) + "mm\n\n";
         myAttribute += "ISO Value: " + exif.getAttribute(ExifInterface.TAG_ISO_SPEED_RATINGS) + "\n\n";
         myAttribute += "Model: " + exif.getAttribute(ExifInterface.TAG_MODEL);
@@ -718,7 +690,6 @@ public class FullImageActivity extends AppCompatActivity {
                 Bitmap b = imageView.getDrawingCache();
                 MediaStore.Images.Media.insertImage(getContentResolver(), b, nameImage + "_crop", "");
 //                File storageLoc = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES); //context.getExternalFilesDir(null);
-//
 //                File file = new File(storageLoc, "tan" );
 //                try{
 //                    FileOutputStream fos = new FileOutputStream(file);
@@ -746,7 +717,6 @@ public class FullImageActivity extends AppCompatActivity {
 
     public boolean CheckTime(int curHour,int curMinute, int hourStart, int minuteStart, int hourEnd, int minuteEnd) {
         boolean nightmode = true;
-
         if(hourStart < hourEnd){
             if(hourStart <= curHour && curHour <= hourEnd){
                 if(hourStart == curHour){

@@ -143,8 +143,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return true;
         }
         int id = item.getItemId();
-        if (id == R.id.action_search) {
-            // perform SEARCH operations...
+        if (id == R.id.action_sort) {
+            // perform SORT operations...
             return true;
         }
         return false;

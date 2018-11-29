@@ -47,6 +47,19 @@ public class MyPrefs {
         return passMode;
     }
 
+    void SetNumberOfColumns(Integer[] columns) {
+        SharedPreferences.Editor editor = myPrefs.edit();
+        editor.putInt("columnVertical",columns[0]);
+        editor.putInt("columnHorizontal",columns[1]);
+        editor.apply();
+    }
+    Integer[] getNumberOfColumns() {
+        Integer[] columns = new Integer[2];
+        columns[0] = myPrefs.getInt("columnVertical", 4);
+        columns[1] = myPrefs.getInt("columnHorizontal", 6);
+        return columns;
+    }
+
     public void setStartHour(int hour){
         SharedPreferences.Editor editor = myPrefs.edit();
         editor.putInt("StartHour",hour);

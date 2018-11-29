@@ -6,9 +6,9 @@
     tools:context="com.example.a8560p.fitsealbum.MainActivity" >
 
     <item
-        android:id="@+id/action_search"
-        android:icon="@drawable/baseline_search_24"
+        android:id="@+id/action_sort"
+        android:icon="@drawable/round_sort_24"
         android:orderInCategory="140"
         app:showAsAction="always|withText"
-        android:title="Search"/>
+        android:title="Sort"/>
 </menu>

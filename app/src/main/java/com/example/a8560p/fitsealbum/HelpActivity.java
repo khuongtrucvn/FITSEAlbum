@@ -32,7 +32,6 @@ public class HelpActivity extends AppCompatActivity
         // user clicked a menu-item from ActionBar
            int id = item.getItemId();
            if (id == android.R.id.home) {
-               // perform SEARCH operations...
                finish();
                return true;
            }
