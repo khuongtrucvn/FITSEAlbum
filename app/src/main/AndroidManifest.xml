@@ -51,6 +51,9 @@
         <activity android:name=".LoginCloudActivity" />
         <activity android:name=".LogoutCloudActivity"/>
         <activity android:name=".NightmodeActivity"/>
+        <activity android:name=".TutorialActivity"
+            android:theme="@style/DayNoActionBarTheme"
+            android:screenOrientation="portrait"/>
 
         <provider
             android:name="android.support.v4.content.FileProvider"

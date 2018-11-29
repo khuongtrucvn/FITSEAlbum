@@ -107,4 +107,16 @@ public class MyPrefs {
 
         return minute;
     }
+
+    public void isFirstLaunch(boolean isFirst){
+        SharedPreferences.Editor editor = myPrefs.edit();
+        editor.putBoolean("FirstLaunch",isFirst);
+        editor.commit();
+    }
+
+    public boolean loadIsFirstLaunch(){
+        Boolean isFirst = myPrefs.getBoolean("FirstLaunch", true);
+
+        return isFirst;
+    }
 }

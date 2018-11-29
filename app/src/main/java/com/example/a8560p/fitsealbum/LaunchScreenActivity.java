@@ -82,7 +82,7 @@ public class LaunchScreenActivity extends AppCompatActivity {
 //            Pass your loaded data here using Intent
 //            intent.putExtra("data_key", "");
             if (password.matches("")) {
-                startActivity(new Intent(LaunchScreenActivity.this, MainActivity.class));
+                startActivity(new Intent(LaunchScreenActivity.this, TutorialActivity.class));
             } else {
                 myPrefs.setPassMode(0);
                 startActivity(new Intent(LaunchScreenActivity.this, PasswordActivity.class));
